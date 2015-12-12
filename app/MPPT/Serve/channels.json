@@ -1,0 +1,13 @@
+{
+	"channels": [ 1, 2, 3, 4, 5 ],
+	"calibration": {
+
+		"5": {
+			"DACSlope": "0.00049599", 
+			"DACOffset": "0.0031946", 
+			"ADCSlope": "-0.000019887",
+			"ADCOffset": "0.020373"
+		}
+	}
+}
+
