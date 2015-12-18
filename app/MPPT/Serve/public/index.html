@@ -20,14 +20,14 @@
 
 <div class="container-fluid">
 
-<div class="page-header"><h1><span class="glyphicon glyphicon-dashboard"></span>Stability setup</h1></div>
+<div class="page-header"><h1><span class="glyphicon glyphicon-dashboard"></span>&nbsp;Stability setup</h1></div>
 <div class="col-lg-4">
 	
 	<div class="panel panel-default">
 
 
 		<div class="panel-heading">
-			Configuration
+			Stability configuration
 		</div>
 
 		<div class="panel-body">
@@ -96,7 +96,81 @@
 			</form>
 		</div>
 	</div>
+
+
+
+
+	<div class="panel panel-default">
+
+
+		<div class="panel-heading">
+			j-V curve configuration
+		</div>
+
+		<div class="panel-body">
+			<form class="form" id="form-channels-jv">
+
+				<div class="form-group">
+					<label for="channels">Channels</label>
+					<select name="channels" id="channels" class="form-control channels"></select>
+				</div>
+			</form>
+			<form class="form" id="form-device-jv">
+
+				<input type="hidden" name="status" />
+				<input type="hidden" name="starttime" />
+
+		
+				<div class="form-group">
+					<label for="jv-from">From</label>
+
+					<div class="input-group">
+						<input type="text" name="jv-from" class="form-control" placeholder="Starting voltage" value="1.2" />
+						<span class="input-group-addon">V</span>
+					</div>
+				</div>
+				
+				<div class="form-group">
+					<label for="jv-to">To</label>
+					<div class="input-group">
+						<input type="text" name="jv-to" class="form-control" placeholder="Ending voltage" value="0" />
+						<span class="input-group-addon">V</span>
+					</div>
+				</div>
+
+				
+				<div class="form-group">
+					<label for="jv-scanrate">Settling time</label>
+					<div class="input-group">
+						<input type="text" name="jv-settlingtime" class="form-control" placeholder="Settling time" value="100" />
+						<span class="input-group-addon">ms</span>
+					</div>
+				</div>
+
+
+				<div class="form-group">
+					<label for="jv-nbpoints">Number of points</label>
+					<input type="text" name="jv-nb" class="form-control" placeholder="100" value="100" />
+				</div>
+				
+
+				<div class="form-group">
+
+					<div class="btn-group" role="group">
+						
+						<button class="btn btn-success" name="jv-measure" type="button">
+							<span class="glyphicon glyphicon-play"></span>
+							Measure
+						</button>
+
+					</div>
+				</div>
+			</form>
+		</div>
+	</div>
+
 </div>
+
 
 <div class="col-lg-8">
 
@@ -104,9 +178,40 @@
 
 		<div class="panel-heading">
 			Stability results
+
+			<div class="pull-right">
+
+				Time zone:
+				<div class="btn-group">
+					<button class="btn btn-xs btn-default time" data-time="60" type="button">
+						1min
+					</button>
+					<button class="btn btn-xs btn-default time" data-time="600"  type="button">
+						10min
+					</button>
+					<button class="btn btn-xs btn-default time" data-time="3600"  type="button">
+						1h
+					</button>
+					<button class="btn btn-xs btn-default time" data-time="86400"  type="button">
+						1d
+					</button>
+					<button class="btn btn-xs btn-default time" data-time="604800" type="button">
+						1w
+					</button>
+					<button class="btn btn-xs btn-default time" data-time="2592000" type="button">
+						1m
+					</button>
+				</div>
+
+				<div class="btn-group">
+					<button class="btn btn-xs btn-primary active" id="follow-time" type="button">
+						Follow latest data
+					</button>
+				</div>
+			</div>
 		</div>
 
-		<div class="panel-body">
+		<div class="panel-body" id="graphs">
 			<div id="current" class="stability-graph">
 
 			</div>

@@ -1,56 +1,71 @@
+var lockRedraw;
+var period;
+var graphs;
+
+var socket,
+	maxTime = 0;
+
+function makeSocket() {
 
 
-var sock = new SockJS('localhost:9999/socket');
- 
- sock.onopen = function() {
- 	console.log( sock );
-     sock.send( JSON.stringify( { command: "getAll" } ) );
- };
+	socket = new WebSocket("ws://127.0.0.1:8080");
 
-var data = {};
 
- sock.onmessage = function(e) {
+	 socket.onopen = function() {
+	 	
+	     socket.send( JSON.stringify( { command: "getAll" } ) );
+	 };
 
- 	var d = JSON.parse( e.data );
+	var data = {};
 
- 	if( ! d.latest ) {
- 		d.latest = {};
- 	}
+	 socket.onmessage = function(e) {
 
- 	for( var i = 0, l = d.data.length; i < l; i ++ ) {
+	 	var d = JSON.parse( e.data );
 
- 		if( d.data[ i ].data.currents.length > 0 ) {
+	 	if( ! d.latest ) {
+	 		d.latest = {};
+	 	}
 
- 			data[ i ] = data[ i ] || {};
- 			data[ i ].currents = data[ i ].currents || [];
- 			data[ i ].voltages = data[ i ].voltages || [];
- 			data[ i ].powers = data[ i ].powers || [];
 
- 			data[ i ].currents = data[ i ].currents.concat( d.data[ i ].data.currents );
- 			data[ i ].voltages = data[ i ].voltages.concat( d.data[ i ].data.voltages );
- 			data[ i ].powers = data[ i ].powers.concat( d.data[ i ].data.powers );
+	 	for( var i = 0, l = d.data.length; i < l; i ++ ) {
 
-			graphC.getSerie( d.data[ i ].deviceId.toString() ).setData( data[ i ].currents );
-			graphV.getSerie( d.data[ i ].deviceId.toString() ).setData( data[ i ].voltages );
-			graphP.getSerie( d.data[ i ].deviceId.toString() ).setData( data[ i ].powers );
+	 		if( d.data[ i ].data.currents.length > 0 ) {
+
+	 			data[ i ] = data[ i ] || {};
+	 			data[ i ].currents = data[ i ].currents || [];
+	 			data[ i ].voltages = data[ i ].voltages || [];
+	 			data[ i ].powers = data[ i ].powers || [];
+
+	 			data[ i ].currents = data[ i ].currents.concat( d.data[ i ].data.currents );
+	 			data[ i ].voltages = data[ i ].voltages.concat( d.data[ i ].data.voltages );
+	 			data[ i ].powers = data[ i ].powers.concat( d.data[ i ].data.powers );
+
+
+				graphC.getSerie( "serie_" + d.data[ i ].deviceId + "" ).setData( data[ i ].currents );
+				graphV.getSerie( "serie_" + d.data[ i ].deviceId + "" ).setData( data[ i ].voltages );
+				graphP.getSerie( "serie_" + d.data[ i ].deviceId + "" ).setData( data[ i ].powers );
+		
+				maxTime = Math.max( data[ i ].powers[ data[ i ].powers.length - 1 ][ 0 ], maxTime );
+			}
 		}
-	}
 
-	graphC.autoscaleAxes();
-	graphC.draw();
 
-	graphP.autoscaleAxes();
-	graphP.draw();
-	
-	graphV.autoscaleAxes();
-	graphV.draw();
+		if( ! lockRedraw ) {
 
-	sock.send( JSON.stringify( { command: "getLatest", latest: d.latest } ) );
- };
+			recalculateAxisSpan();
 
- sock.onclose = function() {
-     console.log('close');
- };
+		}
+
+
+		socket.send( JSON.stringify( { command: "getLatest", latest: d.latest } ) );
+
+		
+	 };
+
+	 socket.onclose = function() {
+	     console.log('close');
+	 };
+};
 
 var cSerie, vSerie, pSerie;
 var graphC, graphV, graphP;
@@ -74,6 +89,34 @@ $.fn.serializeObject = function()
     return o;
 };
 
+
+function recalculateAxisSpan() {
+
+	if( graphC && graphP && graphV ) {
+
+
+		if( $("#follow-time").hasClass('active') ) {
+
+			if( period ) {
+
+				graphC.getBottomAxis().zoom( maxTime - period, maxTime + period / 10 );
+				graphP.getBottomAxis().zoom( maxTime - period, maxTime + period / 10 );
+				graphV.getBottomAxis().zoom( maxTime - period, maxTime + period / 10 );
+			} else {
+				graphC.autoscaleAxes();
+				graphP.autoscaleAxes();
+				graphV.autoscaleAxes();
+			}
+		}
+
+		graphC.draw();
+		graphP.draw();
+		graphV.draw();
+	}
+}
+
+
+
  $( document ).ready( function() {
 
  	getStatus();
@@ -93,9 +136,6 @@ $.fn.serializeObject = function()
 
  	$("#form-device").on("click", "button[name=stop]", function() {
 
- 		graphC.getSerie("5").setData([]);
-	 	graphV.newSerie("5").setData([]);
-	 	graphP.newSerie("5").setData([]);
 
 	 	graphC.draw();
 	 	graphV.draw();
@@ -117,6 +157,32 @@ $.fn.serializeObject = function()
 		if( status !== "running" ) {
 			startButton.prop( 'disabled', $( this ).prop( 'value' ).length == 0 );
 		}
+	} );
+
+	$(".time").on("click", function() {
+
+		period = parseInt( $( this ).data( 'time' ) ) * 1000;
+
+		if( $("#follow-time").hasClass('active')) {
+			recalculateAxisSpan();
+		} else {
+			graphs.map( function( graph ) {
+
+				var mid = ( graph.getBottomAxis().getCurrentMin() + graph.getBottomAxis().getCurrentMax() ) / 2;
+				graph.getBottomAxis().zoom( mid - period / 2, mid + period / 2 );
+				graph.draw();
+			} );
+		}
+		$( ".time" ).removeClass('active');
+		$( this ).addClass( 'active' );
+
+	} );
+
+	$("#follow-time" ).on('click', function() {
+
+		$( this ).toggleClass('active');
+		console.log('sdf');
+		recalculateAxisSpan();
 	} );
 
  	var root = $( "#form-device" );
@@ -158,7 +224,6 @@ $.fn.serializeObject = function()
 	 	name.trigger( "keyUp" );
 	 }
 
-	
 
 
  function makeGraphs() {
@@ -166,7 +231,44 @@ $.fn.serializeObject = function()
  	var options = {
 
 		plugins: {
-			'zoom': { zoomMode: 'x' }
+			'zoom': { zoomMode: 'x',
+				onZoomStart: function() {
+					lockRedraw = true;
+				},
+
+				onZoomEnd: function( graph ) {
+					lockRedraw = false;
+
+					graphC.getBottomAxis().zoom( graph.getBottomAxis().getCurrentMin(), graph.getBottomAxis().getCurrentMax() );
+					graphV.getBottomAxis().zoom( graph.getBottomAxis().getCurrentMin(), graph.getBottomAxis().getCurrentMax() );
+					graphP.getBottomAxis().zoom( graph.getBottomAxis().getCurrentMin(), graph.getBottomAxis().getCurrentMax() );
+
+					graphC.draw();
+					graphV.draw();
+					graphP.draw();
+
+					period = graph.getBottomAxis().getCurrentMax() - graph.getBottomAxis().getCurrentMin();
+
+					$("#follow-time").removeClass('active');
+					$(".time").removeClass('active');
+				},
+
+				onDblClick: function( graph ) {
+					period = false;
+					lockRedraw = false;
+					$("#follow-time").addClass('active');
+					$(".time").removeClass('active');
+
+					graphC.getBottomAxis().zoom( graph.getBottomAxis().getCurrentMin(), graph.getBottomAxis().getCurrentMax() );
+					graphV.getBottomAxis().zoom( graph.getBottomAxis().getCurrentMin(), graph.getBottomAxis().getCurrentMax() );
+					graphP.getBottomAxis().zoom( graph.getBottomAxis().getCurrentMin(), graph.getBottomAxis().getCurrentMax() );
+
+					graphC.draw();
+					graphV.draw();
+					graphP.draw();
+
+				}
+			 }
 		},
 
 		pluginAction: {
@@ -183,9 +285,14 @@ $.fn.serializeObject = function()
 	};
 
  	var axes = { bottom: [ { type: 'time' } ] };
- 	graphC = new Graph( $("#current").get( 0 ), options, axes ).resize( 800, 300 );
- 	graphV = new Graph( $("#voltage").get( 0 ), options, axes).resize( 800, 300 );
- 	graphP = new Graph( $("#power").get( 0 ), options, axes ).resize( 800, 300 );
+ 	graphC = new Graph( $("#current").get( 0 ), options, axes ).resize( $("#graphs").width(), 400 );
+ 	graphV = new Graph( $("#voltage").get( 0 ), options, axes).resize( $("#graphs").width(), 400 );
+ 	graphP = new Graph( $("#power").get( 0 ), options, axes ).resize( $("#graphs").width(), 400 );
+
+	var legend = graphC.makeLegend().setAutoPosition("bottom");
+    var legend = graphP.makeLegend().setAutoPosition("bottom");
+    var legend = graphV.makeLegend().setAutoPosition("bottom");
+
 
  	graphC
  		.getLeftAxis()
@@ -208,11 +315,13 @@ $.fn.serializeObject = function()
  		.setScientific( true )
  		.setUnitDecade( true );
 
-
- 	graphC.newSerie("5").autoAxis();
- 	graphV.newSerie("5").autoAxis();
- 	graphP.newSerie("5").autoAxis();
-
+/*
+ 	graphP.getLeftAxis().forceMin( 0 );
+ 	graphC.getLeftAxis().forceMin( 0 );
+ 	graphV.getLeftAxis().forceMin( 0 );
+*/
+ 	graphs = [ graphP, graphC, graphV ];
+ 	
  }
 
  function getStatus() {
@@ -220,6 +329,16 @@ $.fn.serializeObject = function()
  	$.getJSON("/getCurrentStatus", {}, function( status ) {
 
  		var options = status.channels.channels.map( function( channel ) {
+			
+			var jsGraphOptions = ( ( status.channels.options[ channel ] || {} ).serie || {} );
+
+			status.devices[ channel ] = status.devices[ channel ] || { name: "unused"};
+
+	 		graphC.newSerie( "serie_" + channel + "", jsGraphOptions ).autoAxis().setLabel( status.devices[ channel ].name + " (" + channel + ")" );
+		 	graphV.newSerie( "serie_" + channel + "", jsGraphOptions ).autoAxis().setLabel( status.devices[ channel ].name + " (" + channel + ")" );
+		 	graphP.newSerie( "serie_" + channel + "", jsGraphOptions ).autoAxis().setLabel( status.devices[ channel ].name + " (" + channel + ")" );
+
+
  			var ret = "Channel " + channel;
  			if( status.devices[ channel ] ) {
  				ret += ": " + status.devices[ channel ].name;
@@ -236,6 +355,10 @@ $.fn.serializeObject = function()
  			}
  			return '<option value="' + channel + '" ' + ( currentChannel == channel ? ' selected="selected" ' : '' ) + '>' + ret + '</option>';
  		});
+	
+	graphC.updateLegend();
+	graphP.updateLegend();
+	graphV.updateLegend();
 
  		var selectChannels = $("#form-channels select.channels").html( options );//.populate( status );
 
@@ -254,6 +377,8 @@ $.fn.serializeObject = function()
  			updateFormDevice();
 
  		}).trigger("change");
+
+ 		makeSocket();
  	});
  }
 

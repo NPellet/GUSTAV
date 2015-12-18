@@ -1,12 +1,133 @@
 {
-	"channels": [ 1, 2, 3, 4, 5 ],
-	"calibration": {
+	"channels": [ 0, 1, 2, 3, 4, 5, 6, 7 ],
+
+	"options": {
+
+		"0": {
+
+			"serie": {
+				"lineColor": "#DE4112"
+			}
+		},
+
+		"1": {
+			"serie": {
+				"lineColor": "#DEAE12"
+			}
+		},
+
+		"2": {
+			"serie": {
+				"lineColor": "#66B518"
+			}
+		},
+
+		"3": {
+			"serie": {
+				"lineColor": "#18B598"
+			}
+		},
+
+		"4": {
+			"serie": {
+				"lineColor": "#18ABB5"
+			}
+		},
 
 		"5": {
-			"DACSlope": "0.00049599", 
-			"DACOffset": "0.0031946", 
-			"ADCSlope": "-0.000019887",
-			"ADCOffset": "0.020373"
+			"serie": {
+				"lineColor": "#1851B5"
+			}
+		},
+
+		"6": {
+			"serie": {
+				"lineColor": "#6418B5"
+			}
+		},
+
+		"7": {
+			"serie": {
+				"lineColor": "#B518B2"
+			}
+		}
+
+
+
+	},
+
+	"calibration": {
+
+		"0": {
+			"DACSlope": "0.00099992", 
+			"DACOffset": "-2.0478", 
+			"ADCSlopeNegative": "-0.0000046104",
+			"ADCOffsetNegative": "-0.0000036719",
+			"ADCSlopePositive": "-0.0000046093",
+			"ADCOffsetPositive": "0.018881"
+		},
+
+		"1": {
+			"DACSlope": "0.00099992", 
+			"DACOffset": "-2.0478", 
+			"ADCSlopeNegative": "-0.0000046104",
+			"ADCOffsetNegative": "-0.0000036719",
+			"ADCSlopePositive": "-0.0000046093",
+			"ADCOffsetPositive": "0.018881"
+		},
+
+		"2": {
+			"DACSlope": "0.00099992", 
+			"DACOffset": "-2.0478", 
+			"ADCSlopeNegative": "-0.0000046104",
+			"ADCOffsetNegative": "-0.0000036719",
+			"ADCSlopePositive": "-0.0000046093",
+			"ADCOffsetPositive": "0.018881"
+		},
+
+		"3": {
+			"DACSlope": "0.00099992", 
+			"DACOffset": "-2.0478", 
+			"ADCSlopeNegative": "-0.0000046104",
+			"ADCOffsetNegative": "-0.0000036719",
+			"ADCSlopePositive": "-0.0000046093",
+			"ADCOffsetPositive": "0.018881"
+		},
+
+		"4": {
+			"DACSlope": "0.00099992", 
+			"DACOffset": "-2.0478", 
+			"ADCSlopeNegative": "-0.0000046104",
+			"ADCOffsetNegative": "-0.0000036719",
+			"ADCSlopePositive": "-0.0000046093",
+			"ADCOffsetPositive": "0.018881"
+		},
+
+		"5": {
+			"DACSlope": "0.00099992", 
+			"DACOffset": "-2.0478", 
+			"ADCSlopeNegative": "-0.0000046104",
+			"ADCOffsetNegative": "-0.0000036719",
+			"ADCSlopePositive": "-0.0000046093",
+			"ADCOffsetPositive": "0.018881"
+		},
+
+		"6": {
+			"DACSlope": "0.00099992", 
+			"DACOffset": "-2.0478", 
+			"ADCSlopeNegative": "-0.0000046104",
+			"ADCOffsetNegative": "-0.0000036719",
+			"ADCSlopePositive": "-0.0000046093",
+			"ADCOffsetPositive": "0.018881"
+		},
+
+		"7": {
+			"DACSlope": "0.00099992", 
+			"DACOffset": "-2.0478", 
+			"ADCSlopeNegative": "-0.0000046104",
+			"ADCOffsetNegative": "-0.0000036719",
+			"ADCSlopePositive": "-0.0000046093",
+			"ADCOffsetPositive": "0.018881"
 		}
 	}
 }
