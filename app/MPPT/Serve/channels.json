@@ -6,49 +6,106 @@
 		"0": {
 
 			"serie": {
-				"lineColor": "#DE4112"
+				"lineColor": "#DE4112",
+				"lineWidth": 2
+			},
+
+
+			"serie_zone": {
+				"fillColor": "#DE4112",
+				"fillOpacity": "0.2",
+				"lineWidth": 0
 			}
 		},
 
 		"1": {
 			"serie": {
-				"lineColor": "#DEAE12"
+				"lineColor": "#DEAE12",
+				"lineWidth": 2
+			},
+
+			"serie_zone": {
+				"fillColor": "#DEAE12",
+				"fillOpacity": "0.2",
+				"lineWidth": 0
 			}
 		},
 
 		"2": {
 			"serie": {
-				"lineColor": "#66B518"
+				"lineColor": "#66B518",
+				"lineWidth": 2
+			},
+			
+			"serie_zone": {
+				"fillColor": "#66B518",
+				"fillOpacity": "0.2",
+				"lineWidth": 0
 			}
 		},
 
 		"3": {
 			"serie": {
-				"lineColor": "#18B598"
+				"lineColor": "#18B598",
+				"lineWidth": 2
+			},
+			
+			"serie_zone": {
+				"fillColor": "#18B598",
+				"fillOpacity": "0.2",
+				"lineWidth": 0
 			}
 		},
 
 		"4": {
 			"serie": {
-				"lineColor": "#18ABB5"
+				"lineColor": "#18ABB5",
+				"lineWidth": 2
+			},
+			
+			"serie_zone": {
+				"fillColor": "#18ABB5",
+				"fillOpacity": "0.2",
+				"lineWidth": 0
 			}
 		},
 
 		"5": {
 			"serie": {
-				"lineColor": "#1851B5"
+				"lineColor": "#1851B5",
+				"lineWidth": 2
+			},
+			
+			"serie_zone": {
+				"fillColor": "#1851B5",
+				"fillOpacity": "0.2",
+				"lineWidth": 0
 			}
 		},
 
 		"6": {
 			"serie": {
-				"lineColor": "#6418B5"
+				"lineColor": "#6418B5",
+				"lineWidth": 2
+			},
+			
+			"serie_zone": {
+				"fillColor": "#6418B5",
+				"fillOpacity": "0.2",
+				"lineWidth": 0
 			}
 		},
 
 		"7": {
 			"serie": {
-				"lineColor": "#B518B2"
+				"lineColor": "#B518B2",
+				"lineWidth": 2
+			},
+			
+			"serie_zone": {
+				"fillColor": "#B518B2",
+				"fillOpacity": "0.2",
+				"lineWidth": 0
 			}
 		}
 
@@ -58,41 +115,10 @@
 
 	"calibration": {
 
-		"0": {
-			"DACSlope": "0.00099992", 
-			"DACOffset": "-2.0478", 
-			"ADCSlopeNegative": "-0.0000046104",
-			"ADCOffsetNegative": "-0.0000036719",
-			"ADCSlopePositive": "-0.0000046093",
-			"ADCOffsetPositive": "0.018881"
-		},
-
-		"1": {
-			"DACSlope": "0.00099992", 
-			"DACOffset": "-2.0478", 
-			"ADCSlopeNegative": "-0.0000046104",
-			"ADCOffsetNegative": "-0.0000036719",
-			"ADCSlopePositive": "-0.0000046093",
-			"ADCOffsetPositive": "0.018881"
-		},
-
-		"2": {
-			"DACSlope": "0.00099992", 
-			"DACOffset": "-2.0478", 
-			"ADCSlopeNegative": "-0.0000046104",
-			"ADCOffsetNegative": "-0.0000036719",
-			"ADCSlopePositive": "-0.0000046093",
-			"ADCOffsetPositive": "0.018881"
-		},
-
-		"3": {
-			"DACSlope": "0.00099992", 
-			"DACOffset": "-2.0478", 
-			"ADCSlopeNegative": "-0.0000046104",
-			"ADCOffsetNegative": "-0.0000036719",
-			"ADCSlopePositive": "-0.0000046093",
-			"ADCOffsetPositive": "0.018881"
-		},
+		"0":  {"ADCSlopePositive":4.9873e-06,"ADCOffsetPositive":5.7394e-06,"ADCSlopeNegative":4.9806e-06,"ADCOffsetNegative":-0.020398,"DACSlope":0.00099973,"DACOffset":-2.0479},
+		"1":    {"ADCSlopePositive":5.0007e-06,"ADCOffsetPositive":-1.309e-05,"ADCSlopeNegative":4.9974e-06,"ADCOffsetNegative":-0.020485,"DACSlope":0.00099954,"DACOffset":-2.0487},
+		"2":    {"ADCSlopePositive":4.9979e-06,"ADCOffsetPositive":-7.3232e-06,"ADCSlopeNegative":4.9898e-06,"ADCOffsetNegative":-0.020449,"DACSlope":0.0009993,"DACOffset":-2.0476},
+		"3":  {"ADCSlopePositive":4.9912e-06,"ADCOffsetPositive":3.9563e-05,"ADCSlopeNegative":4.9837e-06,"ADCOffsetNegative":-0.020376,"DACSlope":0.00099935,"DACOffset":-2.0485},
 
 		"4": {
 			"DACSlope": "0.00099992", 
@@ -103,14 +129,7 @@
 			"ADCOffsetPositive": "0.018881"
 		},
 
-		"5": {
-			"DACSlope": "0.00099992", 
-			"DACOffset": "-2.0478", 
-			"ADCSlopeNegative": "-0.0000046104",
-			"ADCOffsetNegative": "-0.0000036719",
-			"ADCSlopePositive": "-0.0000046093",
-			"ADCOffsetPositive": "0.018881"
-		},
+		"5":  {"ADCSlopePositive":5.0428e-06,"ADCOffsetPositive":9.3471e-05,"ADCSlopeNegative":5.0402e-06,"ADCOffsetNegative":-0.020547,"DACSlope":0.00099972,"DACOffset":-2.048},
 
 		"6": {
 			"DACSlope": "0.00099992", 
@@ -121,14 +140,7 @@
 			"ADCOffsetPositive": "0.018881"
 		},
 
-		"7": {
-			"DACSlope": "0.00099992", 
-			"DACOffset": "-2.0478", 
-			"ADCSlopeNegative": "-0.0000046104",
-			"ADCOffsetNegative": "-0.0000036719",
-			"ADCSlopePositive": "-0.0000046093",
-			"ADCOffsetPositive": "0.018881"
-		}
+		"7": {"ADCSlopePositive":5.0469e-06,"ADCOffsetPositive":-8.7358e-06,"ADCSlopeNegative":5.0458e-06,"ADCOffsetNegative":-0.020673,"DACSlope":0.0010001,"DACOffset":-2.0493}
 	}
 }
 

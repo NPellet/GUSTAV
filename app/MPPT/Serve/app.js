@@ -5,8 +5,9 @@ var http = require('http');
 var express = require('express');
 var app = express();
 var fs = require('fs');
+var http = require('http');
 
-var serialPort = new SerialPort("/dev/cu.usbmodem1411", {
+var serialPort = new SerialPort("/dev/tty.usbmodem1421", {
   baudrate: 115200,
   dataBits: 8, 
   flowControl: true,
@@ -17,19 +18,19 @@ serialPort.on("open", function() {
 	setTimeout( function() {
 		//serialPort.write( "5,5,2048;" );		
 		serialPort.drain( function() {
-	
+		
 			for( var i in cfgChannels.calibration ) {
 			
 				sendStatus( i, cfgDevices[ i ] );
 				updateConfig( i, cfgDevices[ i ] );
-				serialPort.write("7," + i + "," + cfgChannels.calibration[ i ].DACSlope + "," + cfgChannels.calibration[ i ].DACOffset + ";");
-				serialPort.write("10," + i + "," + cfgChannels.calibration[ i ].ADCSlopePositive + "," + cfgChannels.calibration[ i ].ADCOffsetPositive + "," + cfgChannels.calibration[ i ].ADCSlopeNegative + "," + cfgChannels.calibration[ i ].ADCOffsetNegative + ";");
+
+				serialPort.write("7,0," + i + "," + cfgChannels.calibration[ i ].DACSlope + "," + cfgChannels.calibration[ i ].DACOffset + ";");
+				serialPort.write("10,0," + i + "," + cfgChannels.calibration[ i ].ADCSlopePositive + "," + cfgChannels.calibration[ i ].ADCOffsetPositive + "," + cfgChannels.calibration[ i ].ADCSlopeNegative + "," + cfgChannels.calibration[ i ].ADCOffsetNegative + ";");
+
+
+				console.log( "10,0," + i + "," + cfgChannels.calibration[ i ].ADCSlopePositive + "," + cfgChannels.calibration[ i ].ADCOffsetPositive + "," + cfgChannels.calibration[ i ].ADCSlopeNegative + "," + cfgChannels.calibration[ i ].ADCOffsetNegative + ";" );
 			}
-			
-			
-
 		});
-
 
 	}, 1000 );
 });
@@ -43,14 +44,24 @@ var arduino = {
 			} );
 		} else {
 			console.log( message );
+
 				serialPort.write( message );		
 		}
 	}
 }
 
+var times = [];
 var powers = [];
 var voltages = [];
 var currents = [];
+
+var powermin = [];
+var voltagemin = [];
+var currentmin = [];
+
+var powermax = [];
+var voltagemax = [];
+var currentmax = [];
 
 var data = "";
 var latestDataSent = [];
@@ -88,41 +99,85 @@ function reconnect( callback ) {
 reconnect();
 
 var counter = 0;
+/*
+setInterval( function() {
+	serialPort.emit( "data", "5,0," + Math.random() * 1000000 + "," + Math.random() * 1000000 + "," + Math.random() * 1000000 + "," + Math.random() * 1000000 + "," + Math.random() * 1000000 + "," + Math.random() * 1000000 + "," + Math.random() * 1000000 + "," + Math.random() * 1000000 + "," + Math.random() * 1000000 + ";");
+}, 100 );
+*/
 serialPort.on("data", function( d ) {
 
 	data += d.toString('ascii');
 
-	if( data.indexOf(";") > -1 ) {
+	while( data.indexOf(";") > -1 ) {
+
+		var data2 = data.substr(0, data.indexOf(";") ).replace(';', '');
+
+		if( data2.indexOf('IV') > -1 ) {
+
+			data2 = data2.replace(">", "");
+			data2 = data2.split(",");
+
+			var nothing = data2.shift();
+			var chanNum = data2.shift();
+			var nbPoints = data2.shift();
+
+			fs.writeFileSync("IV_" + chanNum + "_" + Date.now() + ".txt", data2.join("\n") );
+
+		} else {
+
+console.log( data2 );
+			data2 = data2.split(',');
+
+			var deviceId = parseFloat( data2[ 1 ] );
+			var current = parseFloat( data2[ 2 ] ) / 1000000;
+			var voltage = parseFloat( data2[ 3 ] ) / 1000000;
+			var power = parseFloat( data2[ 4 ] ) / 1000000;
+			
+			var _currentmin = parseFloat( data2[ 5 ] ) / 1000000;
+			var _voltagemin = parseFloat( data2[ 7 ] ) / 1000000;
+			var _powermin = parseFloat( data2[ 9 ] ) / 1000000;
+			
+			var _currentmax = parseFloat( data2[ 6 ] ) / 1000000;
+			var _voltagemax = parseFloat( data2[ 8 ] ) / 1000000;
+			var _powermax = parseFloat( data2[ 10 ] ) / 1000000;
+
+			
+			/*
+			if( Math.abs( current ) > 19e-3 ) {
+				return;
+			}
+	*/
+			times[ deviceId ] = times[ deviceId ] || [];
+			powers[ deviceId ] = powers[ deviceId ] || [];
+			voltages[ deviceId ] = voltages[ deviceId ] || [];
+			currents[ deviceId ] = currents[ deviceId ] || [];
+
+			powermin[ deviceId ] = powermin[ deviceId ] || [];
+			voltagemin[ deviceId ] = voltagemin[ deviceId ] || [];
+			currentmin[ deviceId ] = currentmin[ deviceId ] || [];
+
+			powermax[ deviceId ] = powermax[ deviceId ] || [];
+			voltagemax[ deviceId ] = voltagemax[ deviceId ] || [];
+			currentmax[ deviceId ] = currentmax[ deviceId ] || [];
 
 
-		var data2 = data.replace(';', '').split(',');
+			times[ deviceId ].push( Date.now() );
+			powers[ deviceId ].push( power );
+			voltages[ deviceId ].push( voltage );
+			currents[ deviceId ].push( current );
 
-		var deviceId = parseFloat( data2[ 1 ] );
-		var current = parseFloat( data2[ 2 ] ) / 1000000;
-		var voltage = parseFloat( data2[ 3 ] ) / 1000000;
-		var power = parseFloat( data2[ 4 ] ) / 1000000;
-		
-		data = "";
-		
+			powermin[ deviceId ].push( _powermin );
+			powermax[ deviceId ].push( _powermax );
 
-		if( Math.abs( current ) > 19e-3 ) {
-			return;
+			voltagemin[ deviceId ].push( _voltagemin );
+			voltagemax[ deviceId ].push( _voltagemax );
+
+			currentmin[ deviceId ].push( _currentmin );
+			currentmax[ deviceId ].push( _currentmax );	
 		}
 
-		
-		powers[ deviceId ] = powers[ deviceId ] || [];
-		voltages[ deviceId ] = voltages[ deviceId ] || [];
-		currents[ deviceId ] = currents[ deviceId ] || [];
-
-		if( powers[ deviceId ] && voltages[ deviceId ] && currents[ deviceId ] ) {
-
-	
-			powers[ deviceId ].push( [ Date.now(), power ] );
-			voltages[ deviceId ].push( [ Date.now(), voltage ] );
-			currents[ deviceId ].push( [ Date.now(), current ] );
-		
-		}
-		
+		data = data.substr( data.indexOf(";") + 1);
+			
 	}	
 });
 
@@ -140,44 +195,114 @@ setInterval( function() {
 	currents[ 1 ].push( [ Date.now(), Math.random() ] );
 }, 100 );*/
 
+
+
+
 setInterval( function() {
 
 	for( var i in cfgDevices ) {
 
 		var data;
 
-		var filename = getFilename( cfgDevices[ i ] );
-		
+
 		if( cfgDevices[ i ].status == "running" ) {
-
-			try {
-				fs.statSync( filename );
-			} catch ( e ) {
-				fs.appendFileSync( filename, "Time\tVoltage\tCurrent\tPower" );
-			}
 			
-			data = "";
+			
+			serialPort.write("8,0," + i + ",1.2,0,100,100,2;");
+			console.log( "8,0," + i + ",1.2,0,100,100,2;" );
+		}
+	}
+	
+}, 600000 );
 
-			if( powers[ i ] ) {
-				for( var j = 0, l = powers[ i ].length; j < l; j ++ ) {
-					data += "\r\n" + voltages[ i ][ j ][ 0 ] + "\t" + voltages[ i ][ j ][ 1 ] + "\t" + currents[ i ][ j ][ 1 ] + "\t" + powers[ i ][ j ][ 1 ];
-				}
+
+setInterval( function() {
+
+	for( var i in cfgDevices ) {
+
+		var data;
+
+		if( cfgDevices[ i ].status == "running" && times[ i ] && times[ i ].length > 0 ) {
+
+			
+			data = [];
+
+			for( var j = 0, l = powers[ i ].length; j < l; j ++ ) {
+				data.push( [
+
+					{
+						time: times[ i ][ j ],
+						voltage: voltages[ i ][ j ],
+						current: currents[ i ][ j ],
+						power: powers[ i ][ j ],
+						powermin: powermin[ i ][ j ],
+						powermax: powermax[ i ][ j ],
+						currentmin: currentmin[ i ][ j ],
+						currentmax: currentmax[ i ][ j ],
+						voltagemin: voltagemin[ i ][ j ],
+						voltagemax: voltagemax[ i ][ j ]
+					}
+				] );
+//				 + "\t" +  + "\t" +  + "\t" +  + "\t" + voltagesminmax[ i ][ j ][ 1 ] + "\t" + voltagesminmax[ i ][ j ][ 2 ] + "\t" + currentsminmax[ i ][ j ][ 1 ] + "\t" + currentsminmax[ i ][ j ][ 2 ] + "\t" + powersminmax[ i ][ j ][ 1 ] + "\t" + powersminmax[ i ][ j ][ 2 ];
 			}
 
-			fs.appendFileSync( filename, data );		
 
+
+			var postString = JSON.stringify( {
+		   		cellName: getFilename( cfgDevices[ i ] ),
+		   		data: data		   		
+		   	} );
+
+			var options = {
+			  hostname: '127.0.0.1',
+			  port: 3001,
+			  path: '/saveData',
+			  method: 'POST',
+			  headers: {
+			    'Content-Type': 'application/json',
+			    'Content-Length': postString.length
+			  }
+			};
+
+			var req = http.request(options);
+			req.on('error', (e) => {
+			  console.log(`problem with request: ${e.message}`);
+			});
+			// write data to request body
+			req.write(postString);
+			req.end();
+
+/*
+
+			xmlhttp = new XMLHttpRequest();
+		   	xmlhttp.open("POST","127.0.0.1:3001", true);
+		   	xmlhttp.send( JSON.stringify( {
+		   		cellName: getFilename( cfgDevices[ i ] ),
+		   		data: data		   		
+		   	} ) );*/
+			
+			times[ i ] = [];
 			powers[ i ] = [];
 			currents[ i ] = [];
 			voltages[ i ] = [];
 
-			latestDataSent[ i ] = 0;
+			powermin[ i ] = [];
+			currentmin[ i ] = [];
+			voltagemin[ i ] = [];
+
+
+			powermax[ i ] = [];
+			currentmax[ i ] = [];
+			voltagemax[ i ] = [];
+
 		}
 	}
-}, 100000 );
+
+}, 2000 );
 
 
 function getFilename( device ) {
-	return "data/" + device.name + "_" + device.starttime;
+	return device.name.replace(/[^a-zA-Z0-9_]+/ig,'') + "_" + device.starttime;
 }
 
 
@@ -203,6 +328,7 @@ app.get('/getCurrentStatus', function( req, res ) {
 app.get(/\/startChannel\/([0-9]+)/, function( req, res ) {
 	var config = req.query;
 	config.status = "running";
+
 	config.starttime = Date.now();
 	updateConfig( req.params[ '0' ], config );
 	res.send("ok");
@@ -218,23 +344,40 @@ app.get(/\/pauseChannel\/([0-9]+)/, function( req, res ) {
 app.get(/\/stopChannel\/([0-9]+)/, function( req, res ) {
 	var config = req.query;
 	config.status = "stopped";
+
+	req.params[ '0' ] = parseInt( req.params[ '0' ] );
+
 	updateConfig( req.params[ '0' ], config );
 	deleteConfig( req.params[ '0' ] );
 
 	powers[ req.params[ '0' ] ] = [];
 	currents[ req.params[ '0' ] ] = [];
 	voltages[ req.params[ '0' ] ] = [];
+
+	powermin[ req.params[ '0' ] ] = [];
+	currentmin[ req.params[ '0' ] ] = [];
+	voltagemin[ req.params[ '0' ] ] = [];
+
+	powermax[ req.params[ '0' ] ] = [];
+	currentmax[ req.params[ '0' ] ] = [];
+	voltagemax[ req.params[ '0' ] ] = [];
+
 	res.send("ok");
 });
 
 app.get(/\/updateChannel\/([0-9]+)/, function( req, res ) {
-	var config = req.query;
-	updateConfig( req.params[ '0' ], config );
-	res.send("ok");
+
+	if( cfgDevices[ req.params[ '0' ] ].status == "running" ) {
+		var config = req.query;
+		updateConfig( req.params[ '0' ], config );
+		res.send("ok");
+	}
 });
 
 function deleteConfig( deviceId ) {
 	delete cfgDevices[ deviceId ];
+	fs.writeFileSync( "config.json", JSON.stringify( cfgDevices ) );
+
 }
 
 function updateConfig( deviceId, config ) {	
@@ -251,8 +394,6 @@ function updateConfig( deviceId, config ) {
 
 	cfgDevices[ deviceId ] = config;
 	fs.writeFileSync( "config.json", JSON.stringify( cfgDevices ) );
-
-	
 }
 
 function sendStatus( deviceId, config ) {
@@ -260,26 +401,25 @@ function sendStatus( deviceId, config ) {
 	if( ! config ) {
 		return;
 	}
-
 	
 	switch( config.status ) {
 
 		case 'running':
 
-			arduino.send("9," + deviceId + ",1;");
+			arduino.send("9,0," + deviceId + ",1;");
 			if( config.samplerate ) {
-				arduino.send( "6," + deviceId + "," + config.samplerate + ";" );
+				arduino.send( "6,0," + deviceId + "," + config.samplerate + ";" );
 			}
 		break;
 
 		case 'paused':
-			arduino.send( "9," + deviceId + ",0;");
-			arduino.send( "6," + deviceId + ",-2;" );
+			arduino.send( "9,0," + deviceId + ",0;");
+			arduino.send( "6,0," + deviceId + ",-2;" );
 		break;
 
 		case 'stopped':
-			arduino.send( "9," + deviceId + ",0;");
-			arduino.send( "6," + deviceId + ",-3;" );
+			arduino.send( "9,0," + deviceId + ",0;");
+			arduino.send( "6,0," + deviceId + ",-3;" );
 		break;
 	}
 
@@ -287,10 +427,12 @@ function sendStatus( deviceId, config ) {
 
 
 var connections = [];
-
+/*
 var WebSocketServer = require('ws').Server, 
 	wss = new WebSocketServer({ port: 8080 });
 
+	*/
+/*
 wss.on('connection', function connection(ws) {
   
   ws.on('message', function incoming(message) {
@@ -308,7 +450,7 @@ wss.on('connection', function connection(ws) {
 					try {
 						var file = fs.readFileSync( getFilename( cfgDevices[ i ] ) ).toString('ascii').split('\r\n'),
 							line,
-							data = { powers: [], currents: [], voltages: [] };
+							data = { powers: [], currents: [], voltages: [], currentsminmax: [], voltagesminmax: [], powersminmax: [] };
 
 						for( var j = 1; j < file.length; j ++ ) {
 							line = file[ j ].split("\t");
@@ -316,6 +458,11 @@ wss.on('connection', function connection(ws) {
 							data.powers.push( [ parseInt( line[ 0 ] ), parseFloat( line[ 3 ] )  ]  );
 							data.currents.push( [ parseInt( line[ 0 ] ), parseFloat( line[ 2 ] )  ]  );
 							data.voltages.push( [ parseInt( line[ 0 ] ), parseFloat( line[ 1 ] ) ]  );
+
+							data.currentsminmax.push( [ parseInt( line[ 0 ] ), parseFloat( line[ 6 ] ), parseFloat( line[ 7 ] )  ] );
+							data.voltagesminmax.push( [ parseInt( line[ 0 ] ), parseFloat( line[ 4 ] ), parseFloat( line[ 5 ] )  ] );
+							data.powersminmax.push( [ parseInt( line[ 0 ] ), parseFloat( line[ 8 ] ), parseFloat( line[ 9 ] )  ] );
+
 						}				
 
 						obj.push( {
@@ -345,18 +492,32 @@ wss.on('connection', function connection(ws) {
 
 					message.latest[ i ] = message.latest[ i ] || 0;
 
+					var index = 0;
+					for( var j = 0; j < powers[ i ].length; j ++ ) {
+						if( powers[ i ][ j ][ 0 ] > message.latest[ i ] ) {
+							index = j;
+							break;
+						}
+					}
+
 					obj.data.push( { 
 						deviceId: i,
 						data: { 
-							powers: powers[ i ].slice( message.latest[ i ] || 0 ), 
-							voltages: voltages[ i ].slice( message.latest[ i ] || 0 ), 
-							currents: currents[ i ].slice( message.latest[ i ] || 0 ) 
+							powers: powers[ i ].slice( j ), 
+							voltages: voltages[ i ].slice( j ), 
+							currents: currents[ i ].slice( j ) ,
+							currentsminmax: currentsminmax[ i ].slice( j ) ,
+							voltagesminmax: voltagesminmax[ i ].slice( j ) ,
+							powersminmax: powersminmax[ i ].slice( j ) 
+
 						} 
 					} );
+					
 
-					message.latest[ i ] = powers[ i ].length;
+					message.latest[ i ] = powers[ i ][ powers[ i ].length - 1 ][ 0 ];
 				}
 			}
+
 
 			ws.send( 
 				JSON.stringify( obj )
@@ -368,3 +529,4 @@ wss.on('connection', function connection(ws) {
 
   
 });
+*/
