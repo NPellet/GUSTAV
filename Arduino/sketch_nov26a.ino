@@ -1,259 +1,294 @@
-#include <CmdMessenger.h>
-#include <SolarCell.h>
+//#include <MemoryFree.h>
 
-int ADCSDIn = 33;
-int ADCSDOut = 37;
-int CSADC1 = 39;
-int CSADC2 = 41;
-int ADCClk = 35;
-int DACClk = 44;
-int DACSync = 42;
-int DACSD = 40;
+#include <DeviceBoard.h>
+
+#include <SPI.h>
 
 
-int readChannel = 0;
-int readChannelCalibration = 0;
 
-int lastDevice = 0;
-
-bool MMPT = true;
-bool Calibrate = false;
-bool IV = false;
-
-
-SolarCell devices[ 1 ] = { SolarCell( DACSD, DACSync, DACClk, CSADC1, ADCClk, ADCSDIn, ADCSDOut, 2 ) };
-SolarCell currentDevice = devices[ 0 ];
-
-bool waiting = false;
-
-char field_separator   = ',';
-char command_separator = ';';
-CmdMessenger cmdMessenger = CmdMessenger(SerialUSB, field_separator, command_separator);
-#define TIME_RTC 300000
-
-
-enum
-{
-  kCOMM_ERROR = 000,    // Lets Arduino report serial port comm error back to the PC (only works for some comm errors)
-  kACK = 001,           // Arduino acknowledges cmd was received
-  kARDUINO_READY = 002, // After opening the comm port, send this cmd 02 from PC to check arduino is ready
-  kERR = 003,           // Arduino reports badly formatted cmd, or cmd not recognised
-  kANSWER = 004,
-  // For the above commands, we just call cmdMessenger.sendCmd() anywhere we want in our Arduino program.
-  kSEND_CMDS_END,       // Mustnt delete this line
-};
-
-messengerCallbackFunction messengerCallbacks[] =
-{
-  setVoltage,
-  setRate,
-  setCalibration,
-  makeIV
-};
-
-void doSmth() {}
-
-void setRate() {
-  int chan = cmdMessenger.readInt16Arg();
-  double rate = cmdMessenger.readDoubleArg();
-  currentDevice.setRate( rate );
-  waiting = false;
-  detachInterrupt( digitalPinToInterrupt( currentDevice.getADCSDPin( ) ) );
-
-}
-
-void setVoltage() {
-  int voltageCode = cmdMessenger.readInt16Arg();
-  digitalWrite( 13, HIGH );
-
-  currentDevice.setDAC( voltageCode );
-  currentDevice.configureCurrent();
-  delay( 20 );
-  waiting = true;
-  attachInterrupt( digitalPinToInterrupt( currentDevice.getADCSDPin() ), conversionDoneCalibration, FALLING );
-  digitalWrite( currentDevice.getADCCSPin(), LOW ); // Bring the CS Pin low 
-}
-
-void setCalibration() {
-  
-  int chan = cmdMessenger.readInt16Arg();
-  
-  double DACSlope = cmdMessenger.readDoubleArg();
-  double DACOffset = cmdMessenger.readDoubleArg();
-  double ADCSlope = cmdMessenger.readDoubleArg();
-  double ADCOffset = cmdMessenger.readDoubleArg();
-
-  currentDevice.setDACCalibration( DACSlope, DACOffset );
-  currentDevice.setADCCalibration( ADCSlope, ADCOffset );
-}
-void makeIV() {
-
-  double startVoltage = cmdMessenger.readDoubleArg();
-  double stopVoltage = cmdMessenger.readDoubleArg();
-  int nbPoints = cmdMessenger.readInt16Arg();
-  int settlingTime = cmdMessenger.readInt16Arg();
-  int equilibrationTime = cmdMessenger.readInt16Arg();
-  detachInterrupt( digitalPinToInterrupt( currentDevice.getADCSDPin( ) ) );
-
-  currentDevice.makeIV( startVoltage, stopVoltage, nbPoints, settlingTime, equilibrationTime );
-  waiting = false;
-  attachInterrupt( digitalPinToInterrupt( currentDevice.getADCSDPin() ), conversionDone, FALLING );
-  digitalWrite( currentDevice.getADCCSPin(), LOW ); // Bring the CS Pin low
-  
-}
 /*
+#include <SolarBoard.h>
 
-void setDACCalibrationCmd() {
-  
-  int chan = cmdMessenger.readInt16Arg();
-  double offset = cmdMessenger.readDoubleArg();
-  double slope = cmdMessenger.readDoubleArg();
+*/
+
+
+#define MAXSTREAMBUFFERSIZE 64
+
+#define pinDACLDAC 31
+#define pinDACCLR 33
+
+#define pinMuxA 49
+#define pinMuxB 45
+#define pinMuxC 47
+#define pinMuxD 43
+#define pinDLatchA 35
+#define pinDLatchB 37
+#define pinDLatchC 39
+#define pinDLatchD 41
+#define pinMuxEn 24
+#define pinDLatchEn 26
+#define pinDLatchOEn 22
+#define pinMISO 74
+#define readChannel 0
+#define idn "GUSTAV,STAM4000,100002,100002"
+
+DeviceBoard board = DeviceBoard();
+
+void setup() {
    
-  chan -= 1;
-  
-  EEPROM.writeDouble( chan * 16, offset ); 
-  EEPROM.writeDouble( chan * 16 + 8, slope ); 
-  
-  DACoffsets[ chan ] = offset;
-  DACslopes[ chan ] = slope;
-}
+   SPI.begin();
+   Serial.begin(9600); // Initializes Serial communication (for debugging)
+    //SerialUSB.begin(115200);
 
+  // put your setup code here, to run once:
 
-void setADCCalibrationCmd() {
-  
-  int chan = cmdMessenger.readInt16Arg();
-  double offset = cmdMessenger.readDoubleArg();
-  double slope = cmdMessenger.readDoubleArg();
+    board.assignPinMux( pinMuxEn, pinMuxA, pinMuxB, pinMuxC, pinMuxD);
+    board.assignPinDLatch( pinDLatchEn, pinDLatchOEn, pinDLatchA, pinDLatchB, pinDLatchC, pinDLatchD );
+    board.assignPinDAC( pinDACLDAC, pinDACCLR );
+    
+    board.enableChannel( 0 );
+    board.enableChannel( 2 );
+    board.enableChannel( 4 );
+    board.enableChannel( 6 );
+
+    board.init();
  
-  chan -= 1;
-  EEPROM.writeDouble( ( chan + 8 ) * 16, offset ); 
-  EEPROM.writeDouble( ( chan + 8 ) * 16 + 8, slope ); 
+  //currentBoard = &(boards[ lastBoard ]);
+  //currentDevice = &((boards[ lastBoard ]).devices[ 0 ]);
   
-  ADCoffsets[ chan ] = offset;
-  ADCslopes[ chan ] = slope;
-}*/
 
-// Set cmdMessage general methods
-void arduino_ready() {
-  //Serial.print("Arduino is ready and running");
-  cmdMessenger.sendCmd(kACK,"Arduino ready"); // Sends command 001
-}
+  // Listen on serial connection for messages from the pc
 
-void unknownCmd() {
-  //Serial.print("Unknown command");
-  cmdMessenger.sendCmd(kERR,"Unknown command"); // Sends command 003
-}
+  pinMode( 52, INPUT );
+  pinMode( 42, INPUT );
 
-// Attached callbacks to command messenger
-void attach_callbacks(messengerCallbackFunction* callbacks)
-{
-  int i = 0;
-  int offset = kSEND_CMDS_END;
-  while(callbacks[i])
-  {
-    cmdMessenger.attach(offset+i, callbacks[i]);
-    i++;
+
+};
+
+
+char serialbuffer[ MAXSTREAMBUFFERSIZE ];       
+const char *terminator = ";";
+const char *querySign = "?";
+int commandlength = 0;
+
+
+int cmdToChan( String cmd ) {
+  int pos = cmd.indexOf(":ch");
+  if( pos > -1 ) {
+    return cmd.charAt( pos + 3 ) - '0';
   }
 }
 
+String cmdToVar( String cmd ) {
+
+  int pos = 0, pos2;
+  String s;
+  s.reserve( 30 );
+  while( pos < cmd.length() ) {
+    
+     pos2 = cmd.indexOf(':', pos );
+     if( pos2 < 0 ) {
+        pos2 = cmd.length();
+      }
+      
+     if( ! cmd.substring( pos, pos + 2 ).equals("ch") ) {
+       s.concat( cmd.substring( pos, (int) min( pos2, pos + 4 ) ) );
+     }
+     
+     pos = pos2 + 1;
+  }
+  return s;
+}
 
 
-void setup() {
-  // put your setup code here, to run once:
+
+void processIncomingCommand( String cmd ) {
+
+  int len = cmd.length();
+  String cmdcopy = cmd.substring( 0 );
+  cmd.toLowerCase();
+  int pos;
+  byte query = 0;
+
+  String v;
+  int chan = cmdToChan( cmd );
   
-   // Listen on serial connection for messages from the pc
-  Serial.begin(9600); // Initializes Serial communication (for debugging)
-  SerialUSB.begin(115200);
-
-  pinMode( 13, OUTPUT );
-  currentDevice = devices[ 0 ];
-  // cmdMessenger.discard_LF_CR(); // Useful if your terminal appends CR/LF, and you wish to remove them
-  cmdMessenger.printLfCr(); // Make output more readable whilst debugging in Arduino Serial Monitor
+  cmd.toLowerCase();
   
-  // Attach default / generic callback methods
-  cmdMessenger.attach(kARDUINO_READY, arduino_ready);
-  cmdMessenger.attach(unknownCmd);
-  // Attach my application's user-defined callback methods
-  attach_callbacks(messengerCallbacks);
-  arduino_ready();  
+  if( cmd.charAt( len - 1 ) == '?' ) {
+    query = 1;
+  }
+  
+  pos = cmd.indexOf(" ");
+  if( pos > -1 ) {
+    v = cmd.substring( pos ); 
+  }
+  
+  String command = cmdToVar( cmd );
+  
+ if( command.equals( "*idn" ) ) {
+      reply("", idn, 0 );
+ } else if( command.equals( "meastracsend" ) ) {
+      if( query ) {
+        reply( cmdcopy, board.trackSendRate[ chan ], query );
+      } else {
+        board.trackSendRate[ chan ] = v.toInt();
+      }
+ }
+else if( command.equals( "caliadco" ) ) {
+      if( query ) {
+        reply( cmdcopy, board.adc_offset[ chan ], query );
+      } else {
+        board.adc_offset[ chan ] = v.toFloat();
+      }
+
+ }else if( command.equals( "caliadcs" ) ) {
+      if( query ) {
+        reply( cmdcopy, board.adc_slope[ chan ], query );
+      } else {
+        board.adc_slope[ chan ] = v.toFloat();
+      }
+
+ }else if( command.equals( "calidaco" ) ) {
+      if( query ) {
+        reply( cmdcopy, board.dac_offset[ chan ], query );
+      } else {
+        board.dac_offset[ chan ] = v.toFloat();
+      }
+
+ }else if( command.equals( "calidacs" ) ) {
+      if( query ) {
+        reply( cmdcopy, board.dac_slope[ chan ], query );
+      } else {
+        board.dac_slope[ chan ] = v.toFloat();
+      }
+
+ } else if( command.equals( "measmode" ) ) {
+  
+      if( query ) {
+        reply( cmdcopy, board.mode[ chan ], query );
+      } else {
+        board.mode[ chan ] = v.toInt();
+      }
+      
+  } else if( command.equals("meastracrate" ) ) {
+
+    if( query ) {
+        reply( cmdcopy, board.trackRate[ chan ], query );
+      } else {
+        board.trackRate[ chan ] = v.toInt();
+      }
+ } else if( command.equals("measivstar" ) ) {
+      if( query ) {
+        reply( cmdcopy, board.iv_startvoltage[ chan ], query );
+      } else {
+        board.iv_endvoltage[ chan ] = v.toInt();
+      }
+ } else if( command.equals("measivstop" ) ) {
+      if( query ) {
+        reply( cmdcopy, board.iv_endvoltage[ chan ], query );
+      } else {
+        board.iv_scanrate[ chan ] = v.toInt();
+      }
+ } else if( command.equals("measivscan" ) ) {
+      if( query ) {
+        reply( cmdcopy, board.iv_scanrate[ chan ], query );
+      } else {
+        board.iv_scanrate[ chan ] = v.toInt();
+      }
+ } else if( command.equals("measivnbpo" ) ) {
+      if( query ) {
+        reply( cmdcopy, board.iv_nbpoints[ chan ], query );
+      } else {
+        board.iv_nbpoints[ chan ] = v.toInt();
+      }
+ } else if( command.equals("measivdela" ) ) {
+      if( query ) {
+        reply( cmdcopy, board.iv_delay[ chan ], query );
+      } else {
+        board.iv_delay[ chan ] = v.toInt();
+      }
+ } else if( command.equals("measimmeiv") ) {
+  
+    board.makeIV( chan );
+ 
+ } else if( command.equals("measimmevolt") ) {
+  
+    reply( cmdcopy, board.readVoltage( chan ), query );
+    
+ } else if( command.equals("measimmecurr") ) {
+  
+    reply( cmdcopy, board.readCurrent( chan ), query );
+ } else if( command.equals("sourvolt") ) {
+
+    board.setVoltage( chan, v.toInt() );
+ }
+
+     
 }
 
-void conversionDone() {
-  readChannel = 1;    
+void reply( String command, int value, byte query ) {
+
+  if( command.length() > 0 ) { 
+    if( query ) {
+      command = command.substring( 0, command.length() - 1 );
+    }
+  
+    command.concat(' ');
+  }
+  command.concat( value );
+  command.concat(";");
+  Serial.println( command );
 }
 
-void conversionDoneCalibration() {
-  readChannelCalibration = 1;    
+
+void reply( String command, String value, byte query ) {
+
+  if( command.length() > 0 ) { 
+    if( query ) {
+      command = command.substring( 0, command.length() - 1 );
+    }
+  
+    command.concat(' ');
+  }
+  command.concat( value );
+  command.concat(";");
+  Serial.println( command );
 }
+
+void checkSerial() {
+  char incoming;
+
+  while ( Serial.available() ) {    
+    delay( 1 );
+
+    incoming = Serial.read();
+
+    serialbuffer[ commandlength ] = incoming;
+    commandlength += 1; 
+    
+    //Serial.write( serialbuffer, len );    
+    if( incoming == *terminator ) {
+      //Serial.write( serialbuffer, len );    
+      serialbuffer[ commandlength - 1] = '\0';
+      processIncomingCommand( serialbuffer );
+      commandlength = 0;
+    }
+  } 
+}
+
+
+byte currentChan = 0;
 
 void loop() {
 
-  if( Calibrate ) {
-    
-    if( readChannelCalibration == 1 ) {
-      digitalWrite( 13, LOW );
-      detachInterrupt( digitalPinToInterrupt( currentDevice.getADCSDPin( ) ) );
-
-      currentDevice.measureCurrent();
-      
-      cmdMessenger.sendCmdStart(kANSWER);
-      cmdMessenger.sendCmdArg( currentDevice.getCurrentCode() );
-      cmdMessenger.sendCmdEnd();
-      readChannelCalibration = 0;
-      waiting = false;
-    }
-  }
-
-  if( MMPT ) {
-  
-   if( readChannel == 1 )  {
-  
-      detachInterrupt( digitalPinToInterrupt( currentDevice.getADCSDPin( ) ) );
-      int nextDevice = currentDevice.currentReady();
-      
-      if( nextDevice == 0 ) {
-        readChannel = 0;
-        waiting = false;
- 
-      } else {
-        delay( 10 );
-        
-        readChannel = 0;
-        waiting = true;
-        attachInterrupt( digitalPinToInterrupt( currentDevice.getADCSDPin() ), conversionDone, FALLING );
-        digitalWrite( currentDevice.getADCCSPin(), LOW ); // Bring the CS Pin low
-      }
+    board.loop( currentChan );
+    currentChan++;
+    if( currentChan == 8 ) {
+      currentChan = 0;
     }
 
-    if( ! waiting ) {
-
-      if( currentDevice.MPPT() ) {
-        
-         waiting = true;
-         attachInterrupt( digitalPinToInterrupt( currentDevice.getADCSDPin() ), conversionDone, FALLING );
-         digitalWrite( currentDevice.getADCCSPin(), LOW ); // Bring the CS Pin low
-     }
-   }
-  }
-  
-  cmdMessenger.feedinSerialData();
-  //  Serial.println( digitalRead( SDOut ) );
+    checkSerial();
 }
-
-
-void printDouble( double val, unsigned int precision){
-// prints val with number of decimal places determine by precision
-// NOTE: precision is 1 followed by the number of zeros for the desired number of decimial places
-// example: printDouble( 3.1415, 100); // prints 3.14 (two decimal places)
-
-   Serial.print (int(val));  //prints the int part
-   Serial.print("."); // print the decimal point
-   unsigned int frac;
-   if(val >= 0)
-       frac = (val - int(val)) * precision;
-   else
-       frac = (int(val)- val ) * precision;
-   Serial.println(frac,DEC) ;
-} 
 
 
