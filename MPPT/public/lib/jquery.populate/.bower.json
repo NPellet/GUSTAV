@@ -1,0 +1,26 @@
+{
+  "name": "jquery.populate",
+  "version": "0.5.0",
+  "main": "jquery.populate.js",
+  "ignore": [
+    "demos.html",
+    "screenshots",
+    "test",
+    "vendor",
+    "*.md"
+  ],
+  "dependencies": {
+    "jquery": ">= 1.9.0"
+  },
+  "homepage": "https://github.com/Bugols/jquery.populate",
+  "_release": "0.5.0",
+  "_resolution": {
+    "type": "version",
+    "tag": "0.5.0",
+    "commit": "6a568a21e33631928b82ef3fcb915a28ace64450"
+  },
+  "_source": "git://github.com/Bugols/jquery.populate.git",
+  "_target": "~0.5.0",
+  "_originalSource": "jquery.populate",
+  "_direct": true
+}

@@ -1,0 +1,7 @@
+function ( err ) {
+
+						if( err ) {
+							console.error("Can not save IV curve. Error was " + err.toString() );
+						}
+
+					}

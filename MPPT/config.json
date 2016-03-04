@@ -1,0 +1,12 @@
+{
+
+	"influxdb": {
+		"host": "influxdb.epfl.ch",
+	    "username": "lpi",
+	    "password": "lpi77",
+	    "port": 80,
+	    "database": "lpi"
+
+	}
+
+}

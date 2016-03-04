@@ -1,0 +1,82 @@
+[
+   {
+      "channelName":"Channel 1",
+      "channelId": 0,
+      "ADCSlopePositive":9.9746e-06,
+      "ADCOffsetPositive":5.7394e-06,
+      "ADCSlopeNegative":9.9612e-06,
+      "ADCOffsetNegative":-0.020398,
+      "DACSlope":0.00099973,
+      "DACOffset":-2.0479
+   },
+   {
+      "channelName":"Channel 2",
+      "channelId": 1,
+      "ADCSlopePositive":5.0007e-06,
+      "ADCOffsetPositive":-1.309e-05,
+      "ADCSlopeNegative":4.9974e-06,
+      "ADCOffsetNegative":-0.020485,
+      "DACSlope":0.00099954,
+      "DACOffset":-2.0487
+   },
+   {
+      "channelName":"Channel 3",
+      "channelId": 2,
+      "ADCSlopePositive":9.9958e-06,
+      "ADCOffsetPositive":-7.3232e-06,
+      "ADCSlopeNegative":9.9796e-06,
+      "ADCOffsetNegative":-0.020449,
+      "DACSlope":0.0009993,
+      "DACOffset":-2.0476
+   },
+   {
+      "channelName":"Channel 4",
+      "channelId": 3,
+      "ADCSlopePositive":4.9912e-06,
+      "ADCOffsetPositive":3.9563e-05,
+      "ADCSlopeNegative":4.9837e-06,
+      "ADCOffsetNegative":-0.020376,
+      "DACSlope":0.00099935,
+      "DACOffset":-2.0485
+   },
+   {
+      "channelName":"Channel 5",
+      "channelId": 4,
+      "DACSlope":0.00099992,
+      "DACOffset":-2.0478,
+      "ADCSlopeNegative":-0.0000046104,
+      "ADCOffsetNegative":-0.0000036719,
+      "ADCSlopePositive":-0.0000046093,
+      "ADCOffsetPositive":0.018889
+   },
+   {
+      "channelName":"Channel 6",
+      "channelId": 5,
+      "ADCSlopePositive":5.0428e-06,
+      "ADCOffsetPositive":9.3471e-05,
+      "ADCSlopeNegative":5.0402e-06,
+      "ADCOffsetNegative":-0.020547,
+      "DACSlope":0.00099972,
+      "DACOffset":-2.048
+   },
+   {
+   	"channelName":"Channel 7",
+   	"channelId": 6,
+      "DACSlope":0.00099992,
+      "DACOffset":-2.0478,
+      "ADCSlopeNegative":-0.0000046104,
+      "ADCOffsetNegative":-0.0000036719,
+      "ADCSlopePositive":-0.0000046093,
+      "ADCOffsetPositive":0.018881
+   },
+   {
+   	"channelName":"Channel 8",
+   	"channelId": 7,
+      "ADCSlopePositive": 5.0469e-06,
+      "ADCOffsetPositive": -8.7358e-06,
+      "ADCSlopeNegative": 5.0458e-06,
+      "ADCOffsetNegative": -0.020673,
+      "DACSlope": 0.0010001,
+      "DACOffset": -2.0493
+   }
+]
