@@ -4,6 +4,7 @@ var bodyParser = require('body-parser')
 var influx = require('influx')
 var fs = require('fs');
 var params = JSON.parse( fs.readFileSync( 'params.json' ) );
+var util = require("./util");
 
 var configInfluxDb = {
     host: 'influxdb.epfl.ch',
@@ -17,10 +18,13 @@ var client;
 
 app.use( bodyParser.json() ); 
 
+
+var ip = util.getIp();
+
 // Add headers
 app.use(function (req, res, next) {
 
-    res.setHeader('Access-Control-Allow-Origin', 'http://127.0.0.1:' + params.server.port );
+    res.setHeader('Access-Control-Allow-Origin', 'http://' + ip + ':' + params.server.port );
     res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS, PUT, PATCH, DELETE');
     res.setHeader('Access-Control-Allow-Headers', 'X-Requested-With,content-type');
     res.setHeader('Access-Control-Allow-Credentials', true);

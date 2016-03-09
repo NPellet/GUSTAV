@@ -11,6 +11,7 @@ var Promise = require('bluebird');
 var influx = require("./lib/influxserver");
 var Waveform = require("./lib/waveform");
 var itxBuilder = require("./lib/itxbuilder");
+var util = require("./lib/util");
 
 var trackData = {};
 
@@ -39,6 +40,8 @@ function cleanupfilename( name ) {
 			.replace(/[^0-9A-Za-z_-]/g, "_");
 }
 
+
+var ip = util.getIp();
 
 // Sending data to the influx db
 setInterval( function() {
@@ -71,7 +74,7 @@ setInterval( function() {
 
 
 			var options = {
-			  hostname: '127.0.0.1',
+			  hostname: ip,
 			  port: params.influxdb.serverport,
 			  path: '/saveData',
 			  method: 'POST',
@@ -87,7 +90,7 @@ setInterval( function() {
 			});
 
 			req.on('response', function( response ) {
-console.log( response.error );
+
 				if( response.error ) {
 					// Error handling
 				} else {
