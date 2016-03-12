@@ -234,7 +234,7 @@ define( [ 'json!params', 'js/influxdb', 'jsgraph', 'tinycolor', 'bootstrap', 'po
 
 
 	 	$("#form-device").on("click", "button[name=start]", function() {
-	 		console.log( currentInstrument, currentChannel );
+	 		
 	 		$.get("/startChannel/" + currentInstrument + "/" + currentChannel, $("#form-device").serializeObject(), function() {
 	 			getChannels();
 	 		});
@@ -389,7 +389,7 @@ define( [ 'json!params', 'js/influxdb', 'jsgraph', 'tinycolor', 'bootstrap', 'po
 
 				'timeSerieManager': {
 
-					intervals: [ 1000, 2000, 15000, 60000, 900000, 3600000, 8640000 ]
+					intervals: [ 1000, 5000, 15000, 60000, 900000, 1800000, 3600000, 8640000 ]
 				},
 				'drag': { 
 					dragY: false,
@@ -550,7 +550,7 @@ define( [ 'json!params', 'js/influxdb', 'jsgraph', 'tinycolor', 'bootstrap', 'po
 	 	graphs( function( graph ) {
 
 	 		graph.makeLegend().setAutoPosition("bottom");
-			graph.getPlugin("timeSerieManager").setURL("http://127.0.0.1:3001/getData?cellName=<measurement>&parameter=<parameter>&from=<from>&to=<to>&grouping=<interval>");
+			graph.getPlugin("timeSerieManager").setURL("http://" + document.location.hostname + ":3001/getData?cellName=<measurement>&parameter=<parameter>&from=<from>&to=<to>&grouping=<interval>");
 
 			graph.getPlugin("timeSerieManager").registerPlugin( graph.getPlugin('zoom'), 'dblClick' );
 			graph.getPlugin("timeSerieManager").registerPlugin( graph.getPlugin('zoom'), 'zooming' );

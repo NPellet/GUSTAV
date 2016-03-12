@@ -5,16 +5,19 @@ module.exports = {};
 module.exports.getIp = function() {
   
   var ifaces = os.networkInterfaces();
+  var ip;
   Object.keys(ifaces).forEach(function (ifname) {
    var alias = 0;
 
     ifaces[ifname].forEach(function (iface) {
+
+      console.log( iface.address );
       if ('IPv4' !== iface.family || iface.internal !== false) {
         // skip over internal (i.e. 127.0.0.1) and non-ipv4 addresses
          return;
       }
 
-        return iface.address;/*
+      ip = iface.address;/*
       if (alias >= 1) {
         // this single interface has multiple ipv4 addresses
         console.log(ifname + ':' + alias, iface.address);
@@ -25,5 +28,7 @@ module.exports.getIp = function() {
        ++alias;
      });
   });
+
+  return ip;
 }
 

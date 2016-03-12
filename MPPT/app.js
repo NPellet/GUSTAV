@@ -46,6 +46,8 @@ var ip = util.getIp();
 // Sending data to the influx db
 setInterval( function() {
 
+	var alldata = [];
+
 	for( var i in trackData ) {
 
 		for( var j in trackData[ i ] ) {
@@ -67,49 +69,66 @@ setInterval( function() {
 				} ] );
 			}
 
-			var postString = JSON.stringify( {
+			alldata.push( {
 		   		cellName: getFilename( status[ i ][ j ] ),
 		   		data: data
 		   	} );
+		}
+	}
 
+	var postString = JSON.stringify( alldata );
 
-			var options = {
-			  hostname: ip,
-			  port: params.influxdb.serverport,
-			  path: '/saveData',
-			  method: 'POST',
-			  headers: {
-			    'Content-Type': 'application/json',
-			    'Content-Length': postString.length
-			  }
-			};
+	var options = {
+	  hostname: ip,
+	  port: params.influxdb.serverport,
+	  path: '/saveData',
+	  method: 'POST',
+	  headers: {
+	    'Content-Type': 'application/json',
+	    'Content-Length': postString.length
+	  }
+	};
 
-			var req = http.request(options);
-			req.on('error', function( err ) {
-				console.log( "Error with request: " + err.message );
-			});
+	var req = http.request(options);
+	req.on('abort', function( err ) {
 
-			req.on('response', function( response ) {
+		for( var i in trackData ) {
 
-				if( response.error ) {
-					// Error handling
-				} else {
+			for( var j in trackData[ i ] ) {
+
+				for( var k in trackData[ i ][ j ] ) {
+					trackData[ i ][ j ][ k ] = [];
+				}
+			}
+		}
+
+		console.log( "Error with request: " + err.message );
+	});
+
+	req.on('response', function( response ) {
+
+		if( response.error ) {
+
+			// Error handling
+		} else {
+
+				
+			for( var i in trackData ) {
+
+				for( var j in trackData[ i ] ) {
 
 					for( var k in trackData[ i ][ j ] ) {
 						trackData[ i ][ j ][ k ] = [];
 					}
 				}
-				
-			});
-
-			req.write(postString);
-			req.end();
-
+			}
 		}
-	}
+	} );
 
+	req.write( postString );
+	req.end();
 
-}, 2000 );
+}, 10000 );
 
 
 function getFilename( status ) {
@@ -359,7 +378,7 @@ function registerSerialEvents( connection, portName ) {
 				//fs.appendFileSync('run.txt', data2 + "\n" );
 
 				var calibration;
-console.log( data2 );
+//console.log( data2 );
 				data2 = data2.split(',');	
 
 				var deviceId = parseFloat( data2[ 1 ] );
@@ -383,7 +402,7 @@ console.log( data2 );
 					
 					var cmin = Math.round( getCurrentFromCode( parseInt( data2[ 6 ] ), calibration ) * 1000000 ) / 1000000;
 					var cmax = Math.round( getCurrentFromCode( parseInt( data2[ 7 ] ), calibration ) * 1000000 ) / 1000000;
-console.log( voltage, current, voltage * current );
+console.log( deviceId, voltage, current, voltage * current );
 					trackData[ connection.name ] = trackData[ connection.name ] || {};
 					trackData[ connection.name ][ deviceId ] = trackData[ connection.name ][ deviceId ] || { date: [], v: [], c: [], vmin: [], vmax: [], cmin: [], cmax: [], p: [] };
 

@@ -5,7 +5,7 @@
  * Copyright 2014 Norman Pellet
  * Released under the MIT license
  *
- * Date: 2016-02-24T14:12Z
+ * Date: 2016-03-10T08:42Z
  */
 
 ( function( global, factory ) {
@@ -4693,10 +4693,8 @@
             if ( this.options.scientificScaleExponent ) {
 
               this.scientificExponent = this.options.scientificScaleExponent;
-              
             } else {
               this.scientificExponent = Math.floor( Math.log( Math.max( Math.abs( this.getCurrentMax() ), Math.abs( this.getCurrentMin() ) ) ) / Math.log( 10 ) );
-
             }
           } else {
             this.scientificExponent = 0;
@@ -4754,9 +4752,8 @@
 
             } else {
 
-             // this.unitTspan.setAttribute( 'display', 'none' );
-              //this.preunitTspan.setAttribute( 'display', 'none' );
-              this.preunitTspan.textContent = " ";
+              this.unitTspan.setAttribute( 'display', 'none' );
+              this.preunitTspan.setAttribute( 'display', 'none' );
               this.expTspan.setAttribute( 'display', 'none' );
               this.expTspanExp.setAttribute( 'display', 'none' );
             }
@@ -6453,13 +6450,8 @@
 
             var interval = maxV - minV;
 
-            if( min ) {
-              minV -= ( this.options.axisDataSpacing.min * interval );
-            }
-
-            if( max ) {
-              maxV += ( this.options.axisDataSpacing.max * interval );
-            }
+            minV -= ( this.options.axisDataSpacing.min * interval );
+            maxV += ( this.options.axisDataSpacing.max * interval );
 
             this._doZoomVal( minV, maxV );
           }
@@ -9563,7 +9555,6 @@
           } );
 
           if ( !noRecalculate ) {
-
             self.recalculateSeries( force );
           }
         }
@@ -9589,6 +9580,7 @@
        */
       PluginTimeSerieManager.prototype.init = function( graph, options ) {
         this.graph = graph;
+        this.requestsRunning = 0;
         LRU.create( this.options.LRUName, 200 );
 
       };
@@ -9644,9 +9636,12 @@
         var priority = 1;
 
         var optimalInterval = this.getOptimalInterval( to - from );
+        var optimalIntervalIndex = this.options.intervals.indexOf( optimalInterval );
+        var interval;
 
-        this.options.intervals.forEach( function( interval ) {
+        for ( var i = optimalIntervalIndex - 1; i <= optimalIntervalIndex + 1; i++ ) {
 
+          interval = this.options.intervals[ i ];
           var startSlotId = self.computeSlotID( from, interval );
           var endSlotId = self.computeSlotID( to, interval );
 
@@ -9675,7 +9670,7 @@
 
           } );
 
-        } );
+        }
 
         this.processRequests();
       }
@@ -9726,8 +9721,8 @@
       }
 
       PluginTimeSerieManager.prototype.processRequests = function() {
-
-        if ( this.requestsRunning == this.options.maxParallelRequests ) {
+console.log( this.requestsRunning, this.options.maxParallelRequests );
+        if ( this.requestsRunning >= this.options.maxParallelRequests ) {
           return;
         }
 
@@ -9880,8 +9875,7 @@
       };
 
       PluginTimeSerieManager.prototype.recalculateSeries = function( force ) {
-console.log('recalc');
-console.trace();
+
         var self = this;
 
         this.changed = false;
@@ -9890,10 +9884,10 @@ console.trace();
           self.recalculateSerie( serie, force );
         } );
 
-        if ( this.changed ) {
-          self.graph._applyToAxes( "scaleToFitAxis", [ this.graph.getXAxis(), false, undefined, undefined, false, true ], false, true );
-        }
-
+        /*if ( this.changed ) {
+      self.graph._applyToAxes( "scaleToFitAxis", [ this.graph.getXAxis(), false, undefined, undefined, false, true ], false, true );
+    }
+*/
         this.changed = false;
         //self.graph.autoscaleAxes();
 
@@ -9944,7 +9938,7 @@ console.trace();
         this.changed = true;
 
         serie.setData( data );
-console.log( 'Setting data', data );
+
         if ( serie._zoneSerie ) {
           serie._zoneSerie.setData( dataMinMax );
         }

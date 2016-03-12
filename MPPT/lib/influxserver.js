@@ -1,6 +1,7 @@
 var express = require('express');
 var app = express();
-var bodyParser = require('body-parser')
+var bodyParser = require('body-parser');
+var promise = require("bluebird");
 var influx = require('influx')
 var fs = require('fs');
 var params = JSON.parse( fs.readFileSync( 'params.json' ) );
@@ -60,8 +61,7 @@ app.get('/makeDB', function (req, res) {
 
 app.post('/saveData', function( req, res ) {
 
-    var cellName = req.body.cellName;
-    var data = req.body.data;
+    var cellName, data;
 
     if( ! client ) {
         //console.log( res );
@@ -72,24 +72,53 @@ app.post('/saveData', function( req, res ) {
         return;
     }
 
-    client.writePoints( cellName, data, function( err ) {
-        if (err) {
-            console.log(err);
+    
+    var promises = [];
 
-            res.send( {
-                status: 0,
-                error: err
-            } );
+    function saveData( i, error ) {
+        
+        if( i == req.body.length ) {    // Done
+
+            if( error ) {
+
+                res.send( {
+                    status: 0,
+                    error: err
+                } );
+            } else {
+
+                res.send( {
+                    status: 1,
+                    error: false
+                } );
+
+            }
 
             return;
         }
-        
-        res.send( {
-            status: 1,
-            error: false
+
+
+        var cellName = req.body[ i ].cellName;
+        var data = req.body[ i ].data;
+
+        client.writePoints( cellName, data, function( err ) {
+            if (err) {
+                console.log(err);
+                saveData( i + 1, true );
+                return;
+            }
+
+            saveData( i + 1, error );
         } );
-    } );
+    }
+
+    
+    saveData( 0, false );
+    
+
 } );
+
+
 
 app.get("/getData", function( req, res ) {
     
