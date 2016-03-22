@@ -4,18 +4,20 @@ var Waveform = require("./lib/waveform");
 var itxBuilder = require("./lib/itxbuilder");
 var fs = require("fs");
 
-var serial = new serialport.SerialPort( "/dev/cu.usbmodem1411", {
-	"baudrate": 9600,
+var serial = new serialport.SerialPort( "/dev/cu.wchusbserial1410", {
+	"baudrate": 57600,
     "dataBits": 8,  
     "parity": "none",
-    "flowControl": true,
     "stopBits": 1
 } );
 
-var channelId = 2;
+var channelId = 3;
 
-var calibration = { "ADCSlope":9.9949e-06,
-					"ADCOffset":-0.020496,
+var calibration = { 
+					"ADCSlopeVoltage":6.2495e-05,
+					"ADCOffsetVoltage":-1.0252,
+					"ADCSlopeCurrent":-6.2197e-7,
+					"ADCOffsetCurrent":0.020361,
 					"DACSlope":0.00099977,
 					"DACOffset":-2.0481
 				  };
@@ -28,17 +30,31 @@ commands["MEASurement:IV:STOP"] = getCodeFromVoltage( 0, calibration );
 commands["MEASurement:IV:SCANrate"] = getCodeFromDeltaVoltage( 1, calibration );
 commands["MEASurement:IV:NBPOints"] = 100;
 commands["MEASurement:IV:DELAy"] = 1;
+commands["MEASurement:REGUlation"] = 0.0001;
 
 commands["CALIbration:DACOffset"] = calibration.DACOffset;
 commands["CALIbration:DACSlope"] = calibration.DACSlope;
-commands["CALIbration:ADCOffset"] = calibration.ADCOffset;
-commands["CALIbration:ADCSlope"] = calibration.ADCSlope;
+commands["CALIbration:CURRENT:ADCOffset"] = calibration.ADCOffsetCurrent;
+commands["CALIbration:CURRENT:ADCSlope"] = calibration.ADCSlopeCurrent;
+
+commands["CALIbration:VOLTAGE:ADCOffset"] = calibration.ADCOffsetVoltage;
+commands["CALIbration:VOLTAGE:ADCSlope"] = calibration.ADCSlopeVoltage;
+
 
 commands["MEASurement:MODE"] = 1;
 
 var data = "";
+var regu = 0.0001;
+setTimeout( function() {
+
+	setInterval( function() {
+		console.log("UPDATE REGU");
+		serial.write( "MEASurement:REGUlation:CH" + channelId + " " + regu + ";" );
+		regu *= 2;
+	}, 100000 );
 
 
+}, 100000 );
 
 serial.on("open", function() {
 
@@ -90,12 +106,11 @@ serial.on("open", function() {
 		data += d.toString('ascii');
 
 		while( data.indexOf(";") > -1 ) {
-
+			
 			data2 = data
 				.substr( 0, data.indexOf(";") )
 				.replace( ';', '' );
-
-			if( data2.indexOf( 'IV' ) > -1 ) {
+			if( data2.indexOf( '<IV' ) > -1 ) {
 
 				data2 = data2.replace(">", "");
 				data2 = data2.split(",");
@@ -142,10 +157,10 @@ serial.on("open", function() {
 					} );
 				}
 
-			} else if( data2.indexOf("TRAC" ) > -1 ) {
+			} else if( data2.indexOf("<TRAC" ) > -1 ) {
 
 				//fs.appendFileSync('run.txt', data2 + "\n" );
-console.log( data2 );
+
 				data2 = data2.split(',');	
 
 				var deviceId = parseFloat( data2[ 1 ] );
@@ -177,36 +192,57 @@ console.log( data2 );
 	});
 
 
+	
 	setTimeout( function() {
 
-		for( var i in commands ) {
+		var keys = Object.keys( commands );
 
-			if( !isNaN( commands[ i ] ) && commands[ i ] !== undefined ) {
+		function cmd( i ) {
 
-				console.log( i + ":CH" + channelId + " " + Number( "" + commands[ i ] ) + ";" );
-				serial.write( i + ":CH" + channelId + " " + Number( "" + commands[ i ] ) + ";" );
-				serial.drain();	
-			}	
+			var key = keys[ i ];
+
+			if( ! key ) {
+				return;
+			}
+
+			if( !isNaN( commands[ key ] ) && commands[ key ] !== undefined ) {
+
+			//	console.log( i + ":CH" + channelId + " " + Number( "" + commands[ i ] ) + ";" );
+		//	console.log( key + ":CH" + channelId + " " + Number( "" + commands[ key ] ) + ";" );
+		console.log(  key + ":CH" + channelId + " " + commands[ key ].noExponents() + ";" );
+				serial.write( key + ":CH" + channelId + " " +  commands[ key ].noExponents() + ";", function( err, result ) {
+					//console.log( err, result );
+					serial.flush(function() {
+setTimeout( function() {
+							cmd( i + 1 );
+}, 500 );
+					});
+				} );
+				
+
+				
+			}
+
 		}
 
+		cmd( 0 );
 	
 	}, 3000 );
-	
 
 
 } );
 
 
 function getCodeFromVoltage( voltage, calibration ) {
-	return Math.round( ( voltage - calibration.DACOffset ) / calibration.DACSlope );
+	return Math.round( ( voltage - calibration.ADCOffsetVoltage ) / calibration.ADCSlopeVoltage );
 }
 
 function getCodeFromDeltaVoltage( voltage, calibration ) {
-	return Math.round( voltage / calibration.DACSlope );
+	return Math.round( voltage / calibration.ADCSlopeVoltage );
 }
 
 function getCurrentFromCode( code, calibration ) {
-	return code * calibration.ADCSlope + calibration.ADCOffset;
+	return code * calibration.ADCSlopeCurrent + calibration.ADCOffsetCurrent;
 }
 
 function getCodeFromCurrent( current, calibration ) {
@@ -217,7 +253,26 @@ function getCodeFromCurrent( current, calibration ) {
 
 function getVoltageFromCode( code, calibration ) {
 	
-	return code * calibration.DACSlope + calibration.DACOffset;
+	return code * calibration.ADCSlopeVoltage + calibration.ADCOffsetVoltage;
+}
+
+
+Number.prototype.noExponents= function(){
+    var data= String(this).split(/[eE]/);
+    if(data.length== 1) return data[0]; 
+
+    var  z= '', sign= this<0? '-':'',
+    str= data[0].replace('.', ''),
+    mag= Number(data[1])+ 1;
+
+    if(mag<0){
+        z= sign + '0.';
+        while(mag++) z += '0';
+        return z + str.replace(/^\-/,'');
+    }
+    mag -= str.length;  
+    while(mag--) z += '0';
+    return str + z;
 }
 
 

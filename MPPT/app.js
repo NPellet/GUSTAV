@@ -755,11 +755,14 @@ function sendStatus( instrument, channelId, config, calibration, status ) {
 	commands["MEASurement:IV:SCANrate"] = getCodeFromDeltaVoltage( config["iv-scanrate"], calibration );
 	commands["MEASurement:IV:NBPOints"] = config["iv-nbpoints"];
 	commands["MEASurement:IV:DELAy"] = config["iv-delay"];
-
+/*
 	commands["CALIbration:DACOffset"] = calibration.DACOffset;
 	commands["CALIbration:DACSlope"] = calibration.DACSlope;
-	commands["CALIbration:ADCOffset"] = calibration.ADCOffset;
-	commands["CALIbration:ADCSlope"] = calibration.ADCSlope;
+	*/
+	commands["CALIbration:VOLTage:ADCOffset"] = calibration.ADCOffsetVoltage;
+	commands["CALIbration:VOLTage:ADCSlope"] = calibration.ADCSlopeVoltage;
+	commands["CALIbration:CURRent:ADCOffset"] = calibration.ADCOffsetCurrent;
+	commands["CALIbration:CURRent:ADCSlope"] = calibration.ADCSlopeCurrent;
 
 	commands["MEASurement:IV:DELAy"] = config["iv-delay"];
 	

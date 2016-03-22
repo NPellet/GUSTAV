@@ -1,0 +1,41 @@
+IGOR
+WAVES/D	'time_ms'
+BEGIN
+12.095
+END
+x SetScale/P x 0,1, "", 'time_ms'
+WAVES/D	'power'
+BEGIN
+-0.017125
+END
+x SetScale/P x 0,1, "", 'power'
+WAVES/D	'current'
+BEGIN
+0.019087
+END
+x SetScale/P x 0,1, "", 'current'
+WAVES/D	'voltage'
+BEGIN
+-0.89721
+END
+x SetScale/P x 0,1, "", 'voltage'
+WAVES/D	'vmin'
+BEGIN
+-1.0252
+END
+x SetScale/P x 0,1, "", 'vmin'
+WAVES/D	'vmax'
+BEGIN
+-0.89721
+END
+x SetScale/P x 0,1, "", 'vmax'
+WAVES/D	'cmin'
+BEGIN
+0.020361
+END
+x SetScale/P x 0,1, "", 'cmin'
+WAVES/D	'cmax'
+BEGIN
+0.019087
+END
+x SetScale/P x 0,1, "", 'cmax'
