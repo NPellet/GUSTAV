@@ -312,7 +312,7 @@ define( [ 'json!params', 'js/influxdb', 'jsgraph', 'tinycolor', 'bootstrap', 'po
  		$("#form-channels").on("change", function() {
  			var val = $("#channels").prop('value');
 				
- 			updateFormDevice.apply( this, val.split("_") );
+ 			updateFormDevice.apply( this, val.split(";") );
  		});
 
 
@@ -329,12 +329,12 @@ define( [ 'json!params', 'js/influxdb', 'jsgraph', 'tinycolor', 'bootstrap', 'po
 	 		e.preventDefault();
 	 	});
 
-	function updateFormDevice( group, channel  ) {
+	function updateFormDevice( group, channel ) {
 
 		currentChannel = channel;
 		currentInstrument = group; 
 		
-		
+		console.log( channel, channels, group );
 		for( var i = 0, l = channels[ group ].length; i < l ; i ++ ) {
 
 			if( channels[ group ][ i ].channelId == channel ) {
@@ -602,8 +602,8 @@ define( [ 'json!params', 'js/influxdb', 'jsgraph', 'tinycolor', 'bootstrap', 'po
 
 					var label = ( channels[ i ][ j ].name || channels[ i ][ j ].channelName );
 					running = ( channels[ i ][ j ].status == 'paused' || channels[ i ][ j ].status == 'running' );
-					html += '<option value="' + i + '_' + channels[ i ][ j ].channelId + '">' + label + ( running ? ' (running)' : ' (available)' ) + '</option>';
-
+					html += '<option value="' + i + ';' + channels[ i ][ j ].channelId + '">' + label + ( running ? ' (running)' : ' (available)' ) + '</option>';
+console.log( channels, i, j );
 					var exists = false;
 					graphs( function( graph ) {
 

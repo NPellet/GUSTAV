@@ -229,6 +229,7 @@ function openConnection( connection, portName ) {
 				return;
 			} 
 
+
 			connection.handshake = handshake( connection, portName, connection, connection.name ).then( function( handshakeResult ) {
 
 				var chanId;
@@ -260,7 +261,7 @@ function getVoltageFromCode( delta, calibration ) {
 
 function getVoltageFromCode( code, calibration ) {
 	
-	return code * calibration.DACSlope + calibration.DACOffset;
+	return code * calibration.ADCSlopeVoltage + calibration.ADCOffsetVoltage;
 }
 
 function getCodeFromVoltage( voltage, calibration ) {
@@ -272,7 +273,7 @@ function getCodeFromDeltaVoltage( voltage, calibration ) {
 }
 
 function getCurrentFromCode( code, calibration ) {
-	return code * calibration.ADCSlope + calibration.ADCOffset;
+	return code * calibration.ADCSlopeCurrent + calibration.ADCOffsetCurrent;
 }
 
 function getCodeFromCurrent( current, calibration ) {
@@ -316,7 +317,7 @@ function registerSerialEvents( connection, portName ) {
 				.substr( 0, connection.data.indexOf(";") )
 				.replace( ';', '' );
 
-			if( data2.indexOf( 'IV' ) > -1 ) {
+			if( data2.indexOf( '<IV' ) > -1 ) {
 
 				
 				data2 = data2.replace(">", "");
@@ -373,12 +374,13 @@ function registerSerialEvents( connection, portName ) {
 					} );
 				}
 
-			} else if( data2.indexOf("TRAC" ) > -1 ) {
+			} else if( data2.indexOf("<TRAC" ) > -1 ) {
 
 				//fs.appendFileSync('run.txt', data2 + "\n" );
 
 				var calibration;
 //console.log( data2 );
+console.log( data2 );
 				data2 = data2.split(',');	
 
 				var deviceId = parseFloat( data2[ 1 ] );
@@ -434,14 +436,13 @@ function handshake( connection, portName, response, nameCheck ) {
 			listener = function( dataReceived ) {
 
 	  		data += dataReceived.toString('ascii');
-
 	  		if( data.indexOf(";") > -1 ) {
 
 			  	connection.connection.removeListener( 'data', listener );
-		  	
-		  		var dataname = cleanupname( data );
-
-		  		if( nameCheck && nameCheck !== dataname ) {
+console.log( data );		  	
+		  		var dataname = cleanupname( data.replace("*IDN? ", "") );
+dataname = "GUSTAV1";
+		  		if( nameCheck && nameCheck !== dataname && 1 == 2 ) {
 		  			response.error = true;
 		  			response.errorText = "Handshake has failed. The wrong device seem to be connected to this port. This can happen is you have switched the USB port of the device. Try removing the device and readding it.";
 		  			rejecter( response );
@@ -738,27 +739,49 @@ function saveStatus() {
 	fs.writeFileSync( "status.json", JSON.stringify( status ) );
 }
 
+
+Number.prototype.noExponents= function(){
+    var data= String(this).split(/[eE]/);
+    if(data.length== 1) return data[0]; 
+
+    var  z= '', sign= this<0? '-':'',
+    str= data[0].replace('.', ''),
+    mag= Number(data[1])+ 1;
+
+    if(mag<0){
+        z= sign + '0.';
+        while(mag++) z += '0';
+        return z + str.replace(/^\-/,'');
+    }
+    mag -= str.length;  
+    while(mag--) z += '0';
+    return str + z;
+}
+
+
+
+
+
 function sendStatus( instrument, channelId, config, calibration, status ) {
 
 	var connection = instrument.connection;
 
 	var commands = {};
 
-	if( status.status == 'running' ) {
-		commands["MEASurement:MODE"] = 1;
-	}
 
 	commands["MEASurement:TRACk:SENDrate"] = config.sendrate;
 	commands["MEASurement:TRACk:RATE"] = config.trackrate;
-	commands["MEASurement:IV:STARt"] = getCodeFromVoltage( parseFloat( config["iv-from"] ), calibration );
+	/*commands["MEASurement:IV:STARt"] = getCodeFromVoltage( parseFloat( config["iv-from"] ), calibration );
 	commands["MEASurement:IV:STOP"] = getCodeFromVoltage( parseFloat( config["iv-to"] ), calibration );
-	commands["MEASurement:IV:SCANrate"] = getCodeFromDeltaVoltage( config["iv-scanrate"], calibration );
+	commands["MEASurement:IV:SCANrate"] = getCodeFromDeltaVoltage( config["iv-scanrate"], calibration );*/
 	commands["MEASurement:IV:NBPOints"] = config["iv-nbpoints"];
 	commands["MEASurement:IV:DELAy"] = config["iv-delay"];
 /*
 	commands["CALIbration:DACOffset"] = calibration.DACOffset;
 	commands["CALIbration:DACSlope"] = calibration.DACSlope;
 	*/
+
+	commands["MEASurement:REGUlation"] = 0.001;
 	commands["CALIbration:VOLTage:ADCOffset"] = calibration.ADCOffsetVoltage;
 	commands["CALIbration:VOLTage:ADCSlope"] = calibration.ADCSlopeVoltage;
 	commands["CALIbration:CURRent:ADCOffset"] = calibration.ADCOffsetCurrent;
@@ -766,14 +789,51 @@ function sendStatus( instrument, channelId, config, calibration, status ) {
 
 	commands["MEASurement:IV:DELAy"] = config["iv-delay"];
 	
-	for( var i in commands ) {
 
-		if( !isNaN( commands[ i ] ) && commands[ i ] !== undefined ) {
-
-			console.log( i + ":CH" + channelId + " " + Number( "" + commands[ i ] ) + ";" );
-			instrument.connection.write( i + ":CH" + channelId + " " + Number( "" + commands[ i ] ) + ";" );
-			instrument.connection.drain();	
-		}
-		
+	if( status.status == 'running' ) {
+		commands["MEASurement:MODE"] = 1;
 	}
+
+
+setTimeout( function() {
+
+		var keys = Object.keys( commands );
+
+		function cmd( i ) {
+
+			var key = keys[ i ];
+
+			if( ! key ) {
+				return;
+			}
+
+			if( !isNaN( commands[ key ] ) && commands[ key ] !== undefined ) {
+
+			//	console.log( i + ":CH" + channelId + " " + Number( "" + commands[ i ] ) + ";" );
+		//	console.log( key + ":CH" + channelId + " " + Number( "" + commands[ key ] ) + ";" );
+		console.log( key + ":CH" + channelId + " " +  commands[ key ].noExponents() + ";" );
+				connection.write( key + ":CH" + channelId + " " +  commands[ key ].noExponents() + ";", function( err, result ) {
+					//console.log( err, result );
+					connection.flush(function() {
+						setTimeout( function() {
+	
+							cmd( i + 1 );
+						}, 500 );
+					});
+				} );
+				
+
+				
+			}
+
+		}
+
+		cmd( 0 );
+	
+	}, 3000 );
+
+
+
+
+
 }

@@ -1,10 +1,9 @@
 {
 	"serial": {
 		"parameters": {
-			"baudrate": 9600,
+			"baudrate": 57600,
 		    "dataBits": 8,  
-		    "parity": "none",
-		    "flowControl": true,
+		  
 		    "stopBits": 1
 		},
 

@@ -83,7 +83,7 @@ app.post('/saveData', function( req, res ) {
 
                 res.send( {
                     status: 0,
-                    error: err
+                    error: error
                 } );
             } else {
 
