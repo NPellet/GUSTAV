@@ -7,30 +7,56 @@ define( [ 'json!params', 'js/influxdb', 'jsgraph', 'tinycolor', 'bootstrap', 'po
 		recalculateAxisSpan();
 	}, params.client.graphRefreshRate * 5 );
 
+	var mainGraphs;
 
 	function recalculateAxisSpan() {
 
 		if( $("#follow-time").hasClass('active') ) {
 
 			if( period ) {
-				graphs( function( graph ) {
-					graph.getBottomAxis().zoom( Date.now() - period, Date.now() + period / 10 );	
-					graph.getLeftAxis().scaleToFitAxis( graph.getBottomAxis(), false, undefined, undefined, true, true );
-				});
+				
+				mainGraph.getBottomAxis().zoom( Date.now() - period, Date.now() + period / 10 );	
+				mainGraph.getLeftAxis().scaleToFitAxis( mainGraph.getBottomAxis(), false, undefined, undefined, true, true );
+				
 			}
-			
-			graphs( function( graph ) {
-				graph.draw();
-			});
 
+			mainGraph.draw();
 		}
 	}
 
-	var graphs;
+	
+		var graphConstruction = [
+			{
+				yUnit: "A",
+				yLabel: "Current",
+				divId: "current",
+				timeseriemanagerserieparam: "current",
+				span: [ 0, 0.33 ]
+
+			},
+
+			{
+				yUnit: "V",
+				yLabel: "Voltage",
+				divId: "voltage",
+				timeseriemanagerserieparam: "voltage",
+				span: [ 0.36, 0.66 ]
+			},
+
+			{
+				yUnit: "W",
+				yLabel: "Power output",
+				divId: "power",
+				timeseriemanagerserieparam: "power",
+				span: [ 0.68, 1 ]
+			}
+
+		];
+
 
 	$( document ).ready( function() {
 
-	 	graphs = makeGraphs();
+	 	mainGraph = makeGraph();
 	 	recalculateAxisSpan();
 
 	 	influxdb.ready( $("#form-influxdb"));
@@ -285,14 +311,13 @@ define( [ 'json!params', 'js/influxdb', 'jsgraph', 'tinycolor', 'bootstrap', 'po
 
 				recalculateAxisSpan();
 			} else {
-				graphs( function( graph ) {
-
-					var mid = ( graph.getBottomAxis().getCurrentMin() + graph.getBottomAxis().getCurrentMax() ) / 2;
-					graph.getBottomAxis().zoom( mid - period / 2, mid + period / 2 );
-					graph.getLeftAxis().scaleToFitAxis( graph.getBottomAxis(), false, false, false, false, true );
-					graph.draw();
-				} );
+			
+				var mid = ( mainGraph.getBottomAxis().getCurrentMin() + mainGraph.getBottomAxis().getCurrentMax() ) / 2;
+				mainGraph.getBottomAxis().zoom( mid - period / 2, mid + period / 2 );
+				mainGraph.getLeftAxis().scaleToFitAxis( graph.getBottomAxis(), false, false, false, false, true );
+				mainGraph.draw();
 			}
+
 			$( ".time" ).removeClass('active');
 			$( this ).addClass( 'active' );
 
@@ -309,11 +334,17 @@ define( [ 'json!params', 'js/influxdb', 'jsgraph', 'tinycolor', 'bootstrap', 'po
 		$(".time[data-time=600]").trigger('click');
 
 
- 		$("#form-channels").on("change", function() {
- 			var val = $("#channels").prop('value');
-				
+ 		$("#form-channels-config").on("change", function() {
+ 			var val = $(".channels", this ).prop('value');
+ 			console.log( val );
  			updateFormDevice.apply( this, val.split(";") );
  		});
+
+
+ 		$("#form-channels-jsc").on("change", function() {
+ 			
+ 		});
+
 
 
  	//	$(".colorpicker").colorpicker();
@@ -381,7 +412,7 @@ define( [ 'json!params', 'js/influxdb', 'jsgraph', 'tinycolor', 'bootstrap', 'po
 
 
 
-	 function makeGraphs() {
+	 function makeGraph() {
 
 	 	var options = {
 
@@ -406,11 +437,13 @@ define( [ 'json!params', 'js/influxdb', 'jsgraph', 'tinycolor', 'bootstrap', 'po
 					var min = this.graph.getBottomAxis().getCurrentMin(),
 						max = this.graph.getBottomAxis().getCurrentMax();
 
-					graphs( function( graph ) {
-						graph.getBottomAxis().zoom( min, max );
-						graph.getLeftAxis().scaleToFitAxis( graph.getBottomAxis(), false, undefined, undefined, true, true );
-						graph.draw();
-					});
+
+					mainGraph.getLeftAxis( 0 ).scaleToFitAxis( mainGraph.getBottomAxis(), false, undefined, undefined, true, true );
+					mainGraph.getLeftAxis( 1 ).scaleToFitAxis( mainGraph.getBottomAxis(), false, undefined, undefined, true, true );
+					mainGraph.getLeftAxis( 2 ).scaleToFitAxis( mainGraph.getBottomAxis(), false, undefined, undefined, true, true );
+
+					mainGraph.draw();
+				
 					
 					$("#follow-time").removeClass('active');
 					$(".time").removeClass('active');
@@ -433,40 +466,34 @@ define( [ 'json!params', 'js/influxdb', 'jsgraph', 'tinycolor', 'bootstrap', 'po
 							max = this.graph.getBottomAxis().getCurrentMax();
 
 						lockRedraw = false;
-
-						graphs( function( graph ) {
-							graph.getBottomAxis().zoom( min, max );
-							graph.getLeftAxis().scaleToFitAxis( graph.getBottomAxis(), false, undefined, undefined, true, true );
-							graph.getPlugin('zoom').emit('zoomed');
 							
-							graph.draw();
-						} );
-						
-						period = max - min;
+						mainGraph.getLeftAxis( 0 ).scaleToFitAxis( mainGraph.getBottomAxis(), false, undefined, undefined, true, true );
+						mainGraph.getLeftAxis( 1 ).scaleToFitAxis( mainGraph.getBottomAxis(), false, undefined, undefined, true, true );
+						mainGraph.getLeftAxis( 2 ).scaleToFitAxis( mainGraph.getBottomAxis(), false, undefined, undefined, true, true );
 
+						mainGraph.draw();
+
+					
+						period = max - min;
 						$("#follow-time").removeClass('active');
 						$(".time").removeClass('active');
 					},
 
 					onDblClick: function( ) {
 
-						var min = this.graph.getBottomAxis().getCurrentMin(),
-							max = this.graph.getBottomAxis().getCurrentMax();
+						var min = mainGraph.getBottomAxis().getCurrentMin(),
+							max = mainGraph.getBottomAxis().getCurrentMax();
 
-
-						var graph = this.graph;
 						period = false;
 						lockRedraw = false;
+
 						$("#follow-time").removeClass('active');
 						$(".time").removeClass('active');
 
-						graphs( function( graph ) {
-							graph.getBottomAxis().zoom( min, max );
-							graph.getLeftAxis().scaleToFitAxis( graph.getBottomAxis(), false, min, max, true, true );
-							graph.getPlugin('zoom').emit('zoomed');
-							
-							graph.draw();
-						} );
+						mainGraph.getLeftAxis( 0 ).scaleToFitAxis( mainGraph.getBottomAxis(), false, undefined, undefined, true, true );
+						mainGraph.getLeftAxis( 1 ).scaleToFitAxis( mainGraph.getBottomAxis(), false, undefined, undefined, true, true );
+						mainGraph.getLeftAxis( 2 ).scaleToFitAxis( mainGraph.getBottomAxis(), false, undefined, undefined, true, true );
+						mainGraph.draw();
 					}
 				 }
 			},
@@ -485,92 +512,47 @@ define( [ 'json!params', 'js/influxdb', 'jsgraph', 'tinycolor', 'bootstrap', 'po
 			}
 		};
 
-		var graphConstruction = [
-			{
-				yUnit: "A",
-				yLabel: "Current",
-				divId: "current",
-				timeseriemanagerserieparam: "current"
 
-			},
+ 		var axes = { 
+ 			bottom: [ 
+ 				{ 
+ 					type: 'time'
+ 				}
+ 			],
 
-			{
-				yUnit: "V",
-				yLabel: "Voltage",
-				divId: "voltage",
-				timeseriemanagerserieparam: "voltage"
-			},
-
-			{
-				yUnit: "W",
-				yLabel: "Power output",
-				divId: "power",
-				timeseriemanagerserieparam: "power"
-			}
-
-		];
+ 			left: [ ]
+ 		};
 
 
-		var graphInstances = [];
+		graphConstruction.map( function( el ) {
 
-	 	graphConstruction.map( function( el ) {
-	 		var axes = { 
-	 			bottom: [ 
-	 				{ 
-	 					type: 'time'
-	 				}
-	 			],
+			axes.left.push( 
+				{
+					scientificScale: true,
+					engineeringScale: true,
+					unit: el.yUnit,
+					unitDecade: true,
+					labelValue: el.yLabel,
+					span: el.span
+				}
+			);
 
-	 			left: [
-	 				{
-	 					scientificScale: true,
-	 					engineeringScale: true,
-	 					unit: el.yUnit,
-	 					unitDecade: true,
-	 					labelValue: el.yLabel
-	 				}
-	 			]
-	 		};
-
-	 		var graph = new Graph( $("#" + el.divId ).get( 0 ), options, axes )
-	 							.resize( $("#graphs").width(), 400 );
-
-	 		//graph.getLeftAxis().forceMin( 0 );
-
-	 		graph.timeseriemanagerserieparam = el.timeseriemanagerserieparam;
-	 		graphInstances.push( graph );
 	 	} );
 
+	 	mainGraph = new Graph( $("#graph-main" ).get( 0 ), options, axes ).resize( $("#graphs").width(), 800 );
 
-	 	var graphs = ( function( callback ) {
-	 		
-	 		return graphInstances.map( callback );
-	 	});
+ 		mainGraph.makeLegend().setAutoPosition("bottom");
+		mainGraph.getPlugin("timeSerieManager").setURL("http://" + document.location.hostname + ":3001/getData?cellName=<measurement>&parameter=<parameter>&from=<from>&to=<to>&grouping=<interval>");
 
-	 	graphs( function( graph ) {
-
-	 		graph.makeLegend().setAutoPosition("bottom");
-			graph.getPlugin("timeSerieManager").setURL("http://" + document.location.hostname + ":3001/getData?cellName=<measurement>&parameter=<parameter>&from=<from>&to=<to>&grouping=<interval>");
-
-			graph.getPlugin("timeSerieManager").registerPlugin( graph.getPlugin('zoom'), 'dblClick' );
-			graph.getPlugin("timeSerieManager").registerPlugin( graph.getPlugin('zoom'), 'zooming' );
-			graph.getPlugin("timeSerieManager").registerPlugin( graph.getPlugin('zoom'), 'zoomed' );
-			graph.getPlugin("timeSerieManager").registerPlugin( graph.getPlugin('drag'), 'dragging' );
-			graph.getPlugin("timeSerieManager").registerPlugin( graph.getPlugin('drag'), 'dragged' );
-			graph.getPlugin("timeSerieManager").setIntervalCheck( params.client.graphRefreshRate );
+		mainGraph.getPlugin("timeSerieManager").registerPlugin( mainGraph.getPlugin('zoom'), 'dblClick' );
+		mainGraph.getPlugin("timeSerieManager").registerPlugin( mainGraph.getPlugin('zoom'), 'zooming' );
+		mainGraph.getPlugin("timeSerieManager").registerPlugin( mainGraph.getPlugin('zoom'), 'zoomed' );
+		mainGraph.getPlugin("timeSerieManager").registerPlugin( mainGraph.getPlugin('drag'), 'dragging' );
+		mainGraph.getPlugin("timeSerieManager").registerPlugin( mainGraph.getPlugin('drag'), 'dragged' );
+		mainGraph.getPlugin("timeSerieManager").setIntervalCheck( params.client.graphRefreshRate );
 
 
-	 	});
-
-
-		/*
-
-	 	graphP.getLeftAxis().forceMin( -0.0001 ).setLineAt0( true );
-	 	graphC.getLeftAxis().forceMin( -0.0001 ).setLineAt0( true );
-	 	graphV.getLeftAxis().forceMin( -0.05 ).setLineAt0( true );
-*/
-
-		return graphs;
+		return mainGraph;
 		
 	 }
 
@@ -582,9 +564,9 @@ define( [ 'json!params', 'js/influxdb', 'jsgraph', 'tinycolor', 'bootstrap', 'po
 	var channels;
 	function getChannels() {
 
-		graphs( function( graph ) {
-			graph.getLegend().fixSeries([]);
-		});
+		
+		mainGraph.getLegend().fixSeries([]);
+		
 
 		$.getJSON("/getChannels", {}, function( ch ) {
 
@@ -602,16 +584,17 @@ define( [ 'json!params', 'js/influxdb', 'jsgraph', 'tinycolor', 'bootstrap', 'po
 
 					var label = ( channels[ i ][ j ].name || channels[ i ][ j ].channelName );
 					running = ( channels[ i ][ j ].status == 'paused' || channels[ i ][ j ].status == 'running' );
-					html += '<option value="' + i + ';' + channels[ i ][ j ].channelId + '">' + label + ( running ? ' (running)' : ' (available)' ) + '</option>';
-console.log( channels, i, j );
+					html += '<option value="' + i + ';' + channels[ i ][ j ].channelId + '" class="' + ( running ? 'running' : '' ) + '">' + label + ( running ? ' (running)' : ' (available)' ) + '</option>';
+
 					var exists = false;
-					graphs( function( graph ) {
+					
+					graphConstruction.map( function( el, index ) {
 
-						seriename = "serie_" + i + "_" + channels[ i ][ j ].channelId;
+						seriename = "serie_" + i + "_" + channels[ i ][ j ].channelId + "_" + el.timeseriemanagerserieparam;
 
-						if( ! graph.getSerie( seriename ) && running ) {
+						if( ! mainGraph.getSerie( seriename ) && running ) {
 
-							graph
+							mainGraph
 								.getPlugin("timeSerieManager")
 								.newSerie( 
 									seriename,
@@ -619,51 +602,43 @@ console.log( channels, i, j );
 									'line',
 									{ 
 										measurement: channels[ i ][ j ].filename,
-										parameter: graph.timeseriemanagerserieparam
+										parameter: el.timeseriemanagerserieparam
 									} 
 								)
 								.autoAxis()
+								.setYAxis( mainGraph.getLeftAxis( index ) )
 								.setLabel( channels[ i ][ j ].name + " (" + channels[ i ][ j ].channelId + ")" );
 
-							graph
+							mainGraph
 								.getPlugin("timeSerieManager")
 								.updateZoneSerie( seriename );
 
 							//graph.getSerie( seriename )._zoneSerie.autoAxis();
 
-							graph.getLegend().fixSeriesAdd( graph.getSerie( seriename ) );
+							if( index == 0 ) {
+								mainGraph.getLegend().fixSeriesAdd( mainGraph.getSerie( seriename ) );
+							}
 							
 							exists = true;
-						} else if( graph.getSerie( seriename ) && ! running ) {
 
-							graph.getSerie( seriename )._zoneSerie.kill();
-							graph.getSerie( seriename ).kill();
+						} else if( mainGraph.getSerie( seriename ) && ! running ) {
+
+							mainGraph.getSerie( seriename )._zoneSerie.kill();
+							mainGraph.getSerie( seriename ).kill();
 
 						} else if( running ) {
 
-							graph.getLegend().fixSeriesAdd( graph.getSerie( seriename ) );
+							mainGraph.getLegend().fixSeriesAdd( mainGraph.getSerie( seriename ) );
 							
 							exists = true;
 						}
 
 						if( running ) {
-							allnames[ seriename ] = seriename;
+							var globalSerieName = "serie_" + i + "_" + channels[ i ][ j ].channelId 
+							allnames[ globalSerieName ] = allnames[ globalSerieName ] || [];
+							allnames[ globalSerieName ].push( seriename );
 						}
 					});
-	
-					if( exists ) {
-
-				/*		var bundle = [];
-
-						graphs( function( graph ) {
-
-							bundle.push( graph.getSerie( seriename ) );
-							bundle.push( graph.getSerie( seriename )._zoneSerie );
-
-						} );
-*/
-				//		tracestyle.addSeriesBundle( seriename, label, bundle );
-					}
 				}
 
 				html += '</optgroup>';
@@ -678,29 +653,24 @@ console.log( channels, i, j );
 
 				color = tinycolor( { h: j * 270 / l, s: 1, l: .4 } );
 
-				graphs( function( graph ) {
+				allnames[ i ].map( function( name ) {
 
-					var s = graph.getSerie( i );
+					var s = mainGraph.getSerie( name );
 					s.setLineColor( "#" + color.toHex() );
 
 					if( s._zoneSerie ) {
 						s._zoneSerie.setLineColor( "#" + color.toHex() );
 						s._zoneSerie.setFillColor( "#" + color.toHex() );
 					}
-
 				} );
 
 				j++;
 			}
-
-
-	//		tracestyle.makeHtml();
-
-			graphs( function( graph ) {
-				graph.getLegend().update();
-			});
-
-			$("#channels").html( html );
+			
+			mainGraph.getLegend().update();
+console.log( html );
+			$(".channels").html( html );
+			$("#form-channels-jsc .channels").find('.running').prop('disabled', true );
 		} );
 	}
 

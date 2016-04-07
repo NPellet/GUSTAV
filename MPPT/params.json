@@ -17,8 +17,9 @@
 	"status": {
 		"default": {
 			"status": "stopped",
-			"holdAt": -1,
-			"samplerate": 1,
+			"holdAt": "MPPT",
+			"trackrate": 10,
+			"sendrate": 1000,
 			"iv-from": 1.2,
 			"iv-to": 0,
 			"iv-scanrate": 0.5,

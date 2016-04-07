@@ -30,31 +30,26 @@ commands["MEASurement:IV:STOP"] = getCodeFromVoltage( 0, calibration );
 commands["MEASurement:IV:SCANrate"] = getCodeFromDeltaVoltage( 1, calibration );
 commands["MEASurement:IV:NBPOints"] = 100;
 commands["MEASurement:IV:DELAy"] = 1;
-commands["MEASurement:REGUlation"] = 0.0001;
+commands["MEASurement:REGUlation"] = 0.026;
 
 commands["CALIbration:DACOffset"] = calibration.DACOffset;
 commands["CALIbration:DACSlope"] = calibration.DACSlope;
 commands["CALIbration:CURRENT:ADCOffset"] = calibration.ADCOffsetCurrent;
 commands["CALIbration:CURRENT:ADCSlope"] = calibration.ADCSlopeCurrent;
+commands["NOISe:CURRent"] = 20;
+commands["NOISe:VOLTage"] = 4;
 
 commands["CALIbration:VOLTAGE:ADCOffset"] = calibration.ADCOffsetVoltage;
 commands["CALIbration:VOLTAGE:ADCSlope"] = calibration.ADCSlopeVoltage;
 
+commands["MEASurement:MODE"] = 2;
 
-commands["MEASurement:MODE"] = 1;
 
 var data = "";
-var regu = 0.0001;
-setTimeout( function() {
-
-	setInterval( function() {
-		console.log("UPDATE REGU");
-		serial.write( "MEASurement:REGUlation:CH" + channelId + " " + regu + ";" );
-		regu *= 2;
-	}, 100000 );
+var noiseCurrent = 20;
 
 
-}, 100000 );
+
 
 serial.on("open", function() {
 
@@ -93,6 +88,78 @@ serial.on("open", function() {
 		
 	var date = Date.now();
 
+
+setInterval( function() {
+	
+	noiseCurrent+=5;
+	serial.write( "NOISe:CURRent:CH3 " + ( noiseCurrent ) + ";");
+	console.log( noiseCurrent );
+	empt();
+}, 30000 );
+
+/*
+	setTimeout( function() {
+
+		serial.write( "NOISe:CURRent:CH3 40;");	
+		setTimeout( function() {
+			serial.write( "NOISe:VOLTage:CH3 3;");
+		}, 100 );
+		
+		
+
+		empt();
+		
+	}, 50000 );
+*/
+/*
+	setTimeout( function() {
+
+		serial.write( "NOISe:CURRent:CH3 0;");
+		setTimeout( function() {
+			serial.write( "NOISe:VOLTage:CH3 0;");
+		}, 100 );
+		
+		setTimeout( function() {
+			serial.write( "MEASurement:MODE:CH3 1;");
+		}, 200 );
+		
+		
+		
+
+		empt();
+		
+	}, 100000 );
+
+
+	setTimeout( function() {
+
+		serial.write( "NOISe:CURRent:CH3 40;");
+		setTimeout( function() {
+			serial.write( "NOISe:VOLTage:CH3 3;");
+		}, 100 );
+		
+
+		
+		empt();
+		
+	}, 150000 );
+
+
+*/
+	function empt() {
+
+		waveDate.push( ( Date.now() - date ) / 1000 );
+		waveP.push( 0 );
+		waveC.push( 0 );
+		waveV.push( 0 );
+
+		waveVMin.push( 0 );
+		waveVMax.push( 0 );
+
+		waveCMin.push( 0 );
+		waveCMax.push( 0 );
+	}
+
 	setInterval( function() {
 
 		fs.writeFileSync( "data_" + date + ".itx", itxFile.getFile() );
@@ -106,7 +173,9 @@ serial.on("open", function() {
 		data += d.toString('ascii');
 
 		while( data.indexOf(";") > -1 ) {
-			
+
+			console.log( data );
+
 			data2 = data
 				.substr( 0, data.indexOf(";") )
 				.replace( ';', '' );

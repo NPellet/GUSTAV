@@ -1,12 +1,12 @@
 [
-    {"ADCSlopeCurrent":-6.1797e-7,"ADCOffsetCurrent":0.020194,"ADCSlopeVoltage":6.2493e-5,"ADCOffsetVoltage":-1.0253,"channelId":0,"channelName":" Channel 1"},
-    {"ADCSlopeCurrent":-6.1797e-7,"ADCOffsetCurrent":0.020194,"ADCSlopeVoltage":6.2493e-5,"ADCOffsetVoltage":-1.0253,"channelId":1,"channelName":" Channel 2"},
-    {"ADCSlopeCurrent":-6.1797e-7,"ADCOffsetCurrent":0.020194,"ADCSlopeVoltage":6.2493e-5,"ADCOffsetVoltage":-1.0253,"channelId":2,"channelName":" Channel 3"},
-    {"ADCSlopeCurrent":-6.1797e-7,"ADCOffsetCurrent":0.020194,"ADCSlopeVoltage":6.2493e-5,"ADCOffsetVoltage":-1.0253,"channelId":3,"channelName":" Channel 4"},
-    {"ADCSlopeCurrent":-6.1797e-7,"ADCOffsetCurrent":0.020194,"ADCSlopeVoltage":6.2493e-5,"ADCOffsetVoltage":-1.0253,"channelId":4,"channelName":" Channel 5"},
-    {"ADCSlopeCurrent":-6.1797e-7,"ADCOffsetCurrent":0.020194,"ADCSlopeVoltage":6.2493e-5,"ADCOffsetVoltage":-1.0253,"channelId":5,"channelName":" Channel 6"},
-    {"ADCSlopeCurrent":-6.1797e-7,"ADCOffsetCurrent":0.020194,"ADCSlopeVoltage":6.2493e-5,"ADCOffsetVoltage":-1.0253,"channelId":6,"channelName":" Channel 7"},
-    {"ADCSlopeCurrent":-6.1797e-7,"ADCOffsetCurrent":0.020194,"ADCSlopeVoltage":6.2493e-5,"ADCOffsetVoltage":-1.0253,"channelId":7,"channelName":" Channel 8"}
+    {"ADCSlopeCurrent":6.6353e-07,"ADCOffsetCurrent":-0.02169,"ADCSlopeVoltage":6.2635e-05,"ADCOffsetVoltage":-2.0516,"DACSlopeVoltage": 0.00099786, "DACOffsetVoltage": -2.0482,"channelId":0,"channelName":" Channel 1"},
+    {"ADCSlopeCurrent":6.6898e-07,"ADCOffsetCurrent":-0.021819,"ADCSlopeVoltage":6.2681e-05,"ADCOffsetVoltage":-2.0543,"DACSlopeVoltage": 0.00099847, "DACOffsetVoltage": -2.0504,"channelId":1,"channelName":" Channel 2"},
+    {"ADCSlopeCurrent":6.5952-07,"ADCOffsetCurrent":-0.021511,"ADCSlopeVoltage":6.2638e-05,"ADCOffsetVoltage":-2.0514,"DACSlopeVoltage": 0.00099811, "DACOffsetVoltage": -2.0485,"channelId":2,"channelName":" Channel 3"},
+    {"ADCSlopeCurrent":6.6785e-07,"ADCOffsetCurrent":-0.021823,"ADCSlopeVoltage":6.2676e-05,"ADCOffsetVoltage":-2.0535,"DACSlopeVoltage": 0.00099372, "DACOffsetVoltage": -2.0389,"channelId":4,"channelName":" Channel 5"},
+    {"ADCSlopeCurrent":6.599e-07,"ADCOffsetCurrent":-0.021599,"ADCSlopeVoltage":6.2626e-05,"ADCOffsetVoltage":-2.513,"DACSlopeVoltage": 0.00099771, "DACOffsetVoltage": -2.047,"channelId":3,"channelName":" Channel 4"},
+    {"ADCSlopeCurrent":6.6785e-07,"ADCOffsetCurrent":-0.021823,"ADCSlopeVoltage":6.2676e-05,"ADCOffsetVoltage":-2.0535,"DACSlopeVoltage": 0.00099372, "DACOffsetVoltage": -2.0389,"channelId":5,"channelName":" Channel 6"},
+    {"ADCSlopeCurrent":6.6087e-07,"ADCOffsetCurrent":-0.021586,"ADCSlopeVoltage":6.2609e-05,"ADCOffsetVoltage":-2.0505,"DACSlopeVoltage": 0.00099776, "DACOffsetVoltage": -2.0483,"channelId":6,"channelName":" Channel 7"},
+    {"ADCSlopeCurrent":6.6785e-07,"ADCOffsetCurrent":-0.021823,"ADCSlopeVoltage":6.2676e-05,"ADCOffsetVoltage":-2.0535,"DACSlopeVoltage": 0.00099372, "DACOffsetVoltage": -2.0389,"channelId":7,"channelName":" Channel 8"}
    
     
 ]

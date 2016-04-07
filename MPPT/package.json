@@ -1,1 +1,9 @@
-{}
+{
+  "name": "GUSTAV",
+  "version": "1.0.1",
+  "description": "The server and client application for the GUSTAV Hadès ageing setup",
+  "main": "app.js",
+  "dependencies": {
+    "serialport": "^2.0.6"
+  }
+}

@@ -83,7 +83,7 @@ app.post('/saveData', function( req, res ) {
 
                 res.send( {
                     status: 0,
-                    error: error
+                    error: err
                 } );
             } else {
 
@@ -198,24 +198,25 @@ app.get("/export", function( req, res ) {
 
     if( ! client ) {
 
-        res.send( {
+        res.send( JSON.stringify( {
             status: 0,
             error: "No client connected"
-        } );
+        } ) );
         return;
     }
 
-    var cellName = req.query.cellName;
+    var cellName = req.body.cellName;
     
-    client.query( "SELECT voltage AS voltage, voltagemax, voltagemin, current, currentmax, currentmin, power FROM " + cellName, function( err, results ) {
+    console.log( cellName );
+    client.query( "SELECT voltage, voltagemax, voltagemin, current, currentmax, currentmin, power FROM " + cellName + " GROUP BY time(5s) FILL(none)", function( err, results ) {
         
         if (err) {
 
-            res.send( {
+            res.send( JSON.stringify( {
                 status: 0,
-                error: error.toString(),
+                error: err.toString(),
                 data: []
-            } );
+            } ) );
 
             return;
         }
@@ -224,31 +225,31 @@ app.get("/export", function( req, res ) {
         var data = {};
         var time = [];
 
-        header.map( function( val ) {
+        headers.map( function( val ) {
             data[ val ] = [];
         } );
 
         for( var i = 0, l = results[ 0 ].length; i < l; i ++ ) {
 
-            var time = new Date( results[ 0 ][ i ].time );
+            var timestamp = new Date( results[ 0 ][ i ].time );
             if( i == 0 ) {
-                var time0 = time.getTime();
+                var time0 = timestamp.getTime();
             }
 
-            time.push( ( time.getTime() - time0 ) / 3600000 )
+            time.push( ( timestamp.getTime() - time0 ) / 3600000 )
 
             headers.map( function( head ) {
                 data[ head ].push( results[ 0 ][ i ][ head ])
             } );
         }
 
-        res.send( {
+        res.send( JSON.stringify( {
 
             status: 1,
             error: false,
             data: data
 
-        } );
+        } ) );
     } );
 } );
 

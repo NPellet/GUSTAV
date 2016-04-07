@@ -7,6 +7,9 @@
 	
 	<link rel="stylesheet" href="/lib/bootstrap/dist/css/bootstrap.min.css" />
 	<link rel="stylesheet" href="/lib/mjolnic-bootstrap-colorpicker/dist/css/bootstrap-colorpicker.min.css" />
+	
+	<link href='https://fonts.googleapis.com/css?family=Abril+Fatface' rel='stylesheet' type='text/css'>
+
 <!--
 	<script src="/lib/mjolnic-bootstrap-colorpicker/dist/js/bootstrap-colorpicker.min.js"></script>
 	<link rel="stylesheet" href="/lib/mjolnic-bootstrap-colorpicker/dist/css/bootstrap-colorpicker.min.css" />
@@ -14,349 +17,416 @@
 </head>
 <body>
 
-<div class="container-fluid">
 
-<div class="page-header"><h1><span class="glyphicon glyphicon-dashboard"></span>&nbsp;Stability setup</h1></div>
-<div class="col-lg-3">
+
+<div class="page-header">
 	
-	<div class="panel panel-default">
+	<div class="pull-right col-sm-2" id="header-tabs">
 
-		<div class="panel-heading">
-			Instrument connection
-		</div>
-
-		<div class="panel-body">
-
-			<h4>Connect a new instrument</h4>
-			<form class="form-horizontal" id="form-discovery">
-
-				<div class="form-group">
-					
-					<label for="port-list" class="col-sm-2 control-label">Port</label>
-					
-					<div class="col-sm-10">
-							<select name="ports" id="port-list" class="form-control ports">
-								<option selected="selected" disabled="disabled">Press refresh to update the list</option>
-							</select>
-					</div>
-				</div>
-
-				<div class="form-group">
-					<div class="btn-group pull-right">
-						
-						<button type="button" data-text-searching="Searching... " data-text-search="Refresh" data-text-error="Request error" class="btn btn-default" id="discover">
-							Refresh
-						</button>
-
-						<button type="button" data-text-connecting="Connecting... " data-text-connect="Connect" data-text-error="Failed to connect" class="btn btn-default" disabled="disabled" id="connect">
-							Establish connection
-						</button>
-
-					</div>
-				</div>
-
-			</form>
-
-			
-			<ul id="connected-devices" class="list-group">
-
-			</ul>
-		
-
-		</div>
-
-
+		<ul class="nav nav-tabs nav-justified" role="tablist">
+		  <li role="presentation" class="active"><a href="#results" role="tab" data-toggle="tab">Results</a></li>
+		  <li role="presentation"><a href="#configuration" role="tab" data-toggle="tab">Configuration</a></li>
+		  
+		</ul>
 	</div>
 
 
-	<div class="panel panel-default">
+	<div class="title">
+		<img src="/images/gustav_white.svg" srcset="/images/gustav_white.svg" width="200" height="100" viewPort="0 0 100 100" version="1.1" xmlns="http://www.w3.org/2000/svg" />
+
+		<h1>
+			GUSTAV
+		</h1>
+
+		<h2>
+		 	Device ageing interface
+		 </h2>
+	</div>
+</div>
 
 
-		<div class="panel-heading">
-			Stability configuration
-		</div>
+<div class="container-fluid">
 
 
+ <div class="tab-content">
+    
+    <div role="tabpanel" class="tab-pane" id="configuration">
 
-		<div class="panel-body">
-			<form class="form" id="form-channels">
 
-				<div class="form-group">
-					<label for="channels">Channels</label>
-					<select name="channels" id="channels" class="form-control channels"></select>
-				</div>
-			</form>
-			<form class="form" id="form-device">
+		<div class="col-lg-3">
 
-				<input type="hidden" name="status" />
-				<input type="hidden" name="starttime" />
+			<div class="panel panel-default">
 
-				<div class="form-group">
-					<label for="name">Device name</label>
-					<input type="text" name="name" id="name" class="form-control" placeholder="Device name"	/>
-				</div>
-
-				<h4>Tracking</h4>
-
-				<div class="form-group">
-					<label for="holdAt">Hold at</label>
-					<select name="holdAt" id="holdAt" class="form-control" >
-						<option value="MPPT">MPPT</option>
-						<option value="-1">-1V (reverse)</option>
-						<option value="-0.5">-0.5V (reverse)</option>
-						<option value="-0.1">-0.1V (reverse)</option>
-						<option value="0">0V (Jsc)</option>
-						<option value="0.1">0.1V (forward)</option>
-						<option value="0.2">0.2V (forward)</option>
-						<option value="0.3">0.3V (forward)</option>
-						<option value="0.4">0.4V (forward)</option>
-						<option value="0.5">0.5V (forward)</option>
-						<option value="0.6">0.6V (forward)</option>
-						<option value="0.7">0.7V (forward)</option>
-						<option value="0.8">0.8V (forward)</option>
-						<option value="0.9">0.9V (forward)</option>
-						<option value="1.0">1.0V (forward)</option>
-						<option value="1.1">1.1V (forward)</option>
-						<option value="1.2">1.2V (forward)</option>
-						<option value="1.3">1.3V (forward)</option>
-					</select>
+				<div class="panel-heading">
+					Connected instruments
 				</div>
 
-				<div class="form-group">
-					<label for="sendrate">Recording rate</label>
-					<select name="sendrate" id="sendrate" class="form-control">
-						<option value="10">100 samples per second</option>
-						<option value="100">10 samples per second</option>
-						<option value="1000">1 sample per second</option>
-						<option value="10000">6 samples per minute</option>
-						<option value="60000">1 sample per minute</option>
-						<option value="600000">6 samples per hour</option>
-						<option value="3600000">1 sample per hour</option>
-					</select>
-				</div>
+				<div class="panel-body">
 
-			
+					<form class="form-horizontal" id="form-discovery">
 
-				<div class="form-group">
-					<label for="trackrate">Sampling rate</label>
-					<select name="trackrate" id="trackrate" class="form-control">
-						<option value="0">As fast as possible</option>
-						<option value="10">100 samples per second</option>
-						<option value="100">10 samples per second</option>
-						<option value="1000">1 sample per second</option>
-						
-					</select>
-				</div>
+						<div class="form-group">
+							
+							<label for="port-list" class="col-sm-2 control-label">Port</label>
+							
+							<div class="col-sm-10">
+								<select name="ports" id="port-list" class="form-control ports">
+									<option selected="selected" disabled="disabled">Press refresh to update the list</option>
+								</select>
+							</div>
+						</div>
 
-			
-				<h4>j-V curves</h4>
+						<div class="form-group">
+							<div class="btn-group pull-right">
+								
+								<button type="button" data-text-searching="Searching... " data-text-search="Refresh" data-text-error="Request error" class="btn btn-default" id="discover">
+									Refresh
+								</button>
 
+								<button type="button" data-text-connecting="Connecting... " data-text-connect="Connect" data-text-error="Failed to connect" class="btn btn-default" disabled="disabled" id="connect">
+									Establish connection
+								</button>
 
-				<div class="form-group">
-					<label for="iv-from">Measure every</label>
+							</div>
+						</div>
 
-					<select class="form-control" name="iv-repetition">
-						<option value="0">Never</option>
-						<option value="600000">10 minutes</option>
-						<option value="1800000">30 minutes</option>
-						<option value="3600000">1 hour</option>
-						<option value="10800000">3 hours</option>
-						<option value="21600000">6 hours</option>
-						<option value="86400000">1 day</option>
-					</select>
+					</form>
+
 					
+					<ul id="connected-devices" class="list-group">
+
+					</ul>
+				</div>
+			</div>
+
+
+
+			<div class="panel panel-default">
+
+				<div class="panel-heading">
+					Channel testing
 				</div>
 
+				<div class="panel-body">
 
-				<div class="form-group">
-					<label for="iv-from">Starting voltage</label>
-					<div class="input-group">
-						<input type="text" name="iv-from" class="form-control" placeholder="Starting voltage" value="1.2" />
-						<span class="input-group-addon">V</span>
+					<em>Temporarily records the short circuit current of the selected channel</em>
+
+					<form class="form" class="form-channels" id="form-channels">
+
+						<div class="form-group">
+							<label for="channels">Channel</label>
+							<select name="channels" id="channels" class="form-control channels"></select>
+						</div>
+
+					</form>
+
+					<div class="graph_jsc">
+
+
 					</div>
-				</div>
-
-				
-				<div class="form-group">
-					<label for="iv-to">Ending voltage</label>
-					<div class="input-group">
-						<input type="text" name="iv-to" class="form-control" placeholder="Ending voltage" value="0" />
-						<span class="input-group-addon">V</span>
-					</div>
-				</div>
-
-				
-				<div class="form-group">
-					<label for="iv-scanrate">Scan rate</label>
-					<div class="input-group">
-						<input type="text" name="iv-scanrate" class="form-control" placeholder="Scan rate" value="0.5" />
-						<span class="input-group-addon">V/s</span>
-					</div>
-				</div>
-
-				<div class="form-group">
-					<label for="iv-nbpoints">Number of points</label>
-					<input type="number" max="100" name="iv-nbpoints" class="form-control" placeholder="100" value="100" />
-				</div>
-
-
-				<div class="form-group">
-					<label for="iv-delay">Equilibration time</label>
-					<div class="input-group">
-						<input type="number" max="100" name="iv-delay" class="form-control" placeholder="1" value="1" />
-						<span class="input-group-addon">s</span>
-					</div>
-				</div>
-				
-
-				<div class="form-group">
 
 					<div class="btn-group" role="group">
 						
-						<button class="btn btn-danger" name="stop" type="button">
-							<span class="glyphicon glyphicon-stop"></span>
-							Stop
-						</button>
-
-						<button class="btn btn-warning" name="pause" type="button">
-							<span class="glyphicon glyphicon-pause"></span>
-							Pause
-						</button>
-
 						<button class="btn btn-success" name="start" type="button">
-							<span class="glyphicon glyphicon-play"></span>
+							<span class="glyphicon glyphicon-start"></span>
 							Start
 						</button>
 
+					</div>
 
-						<button class="btn btn-primary" name="update" type="button">
-							<span class="glyphicon glyphicon-reload"></span>
-							Update
-						</button>
+				</div>
+			</div>
 
-						<button class="btn btn-default" name="download" type="button">
-							<span class="glyphicon glyphicon-download-alt"></span>
-							Download results
-						</button>
+
+		</div>
+			
+
+		<div class="col-lg-4">
+
+			<div class="panel panel-default">
+
+				<div class="panel-heading">
+					Channels
+				</div>
+
+				<div class="panel-body">
+
+
+					<form class="form form-channels" id="form-channels-config">
+
+						<div class="form-group">
+							<label for="channels">Channel</label>
+							<select name="channels" id="channels" class="form-control channels"></select>
+						</div>
+
+					</form>
+
+			      	<form class="form" id="form-device">
+
+						<input type="hidden" name="status" />
+						<input type="hidden" name="starttime" />
+
+						<div class="form-group">
+							<label for="name">Device name</label>
+							<input type="text" name="name" id="name" class="form-control" placeholder="Device name"	/>
+						</div>
+
+						<h4>Tracking</h4>
+
+						<div class="form-group">
+							<label for="holdAt">Hold at</label>
+							<select name="holdAt" id="holdAt" class="form-control" >
+								<option value="MPPT">MPPT</option>
+								<option value="-1">-1V (reverse)</option>
+								<option value="-0.5">-0.5V (reverse)</option>
+								<option value="-0.1">-0.1V (reverse)</option>
+								<option value="0">0V (Jsc)</option>
+								<option value="0.1">0.1V (forward)</option>
+								<option value="0.2">0.2V (forward)</option>
+								<option value="0.3">0.3V (forward)</option>
+								<option value="0.4">0.4V (forward)</option>
+								<option value="0.5">0.5V (forward)</option>
+								<option value="0.6">0.6V (forward)</option>
+								<option value="0.7">0.7V (forward)</option>
+								<option value="0.8">0.8V (forward)</option>
+								<option value="0.9">0.9V (forward)</option>
+								<option value="1.0">1.0V (forward)</option>
+								<option value="1.1">1.1V (forward)</option>
+								<option value="1.2">1.2V (forward)</option>
+								<option value="1.3">1.3V (forward)</option>
+							</select>
+						</div>
+
+						<div class="form-group">
+							<label for="sendrate">Recording rate</label>
+							<select name="sendrate" id="sendrate" class="form-control">
+								<option value="10">100 samples per second</option>
+								<option value="100">10 samples per second</option>
+								<option value="1000">1 sample per second</option>
+								<option value="10000">6 samples per minute</option>
+								<option value="60000">1 sample per minute</option>
+								<option value="600000">6 samples per hour</option>
+								<option value="3600000">1 sample per hour</option>
+							</select>
+						</div>
+
+					
+
+						<div class="form-group">
+							<label for="trackrate">Sampling rate</label>
+							<select name="trackrate" id="trackrate" class="form-control">
+								<option value="0">As fast as possible</option>
+								<option value="10">100 samples per second</option>
+								<option value="100">10 samples per second</option>
+								<option value="1000">1 sample per second</option>
+								
+							</select>
+						</div>
+
+					
+						<h4>j-V curves</h4>
+
+
+						<div class="form-group">
+							<label for="iv-from">Measure every</label>
+
+							<select class="form-control" name="iv-repetition">
+								<option value="0">Never</option>
+								<option value="600000">10 minutes</option>
+								<option value="1800000">30 minutes</option>
+								<option value="3600000">1 hour</option>
+								<option value="10800000">3 hours</option>
+								<option value="21600000">6 hours</option>
+								<option value="86400000">1 day</option>
+							</select>
+							
+						</div>
+
+
+						<div class="form-group">
+							<label for="iv-from">Starting voltage</label>
+							<div class="input-group">
+								<input type="text" name="iv-from" class="form-control" placeholder="Starting voltage" value="1.2" />
+								<span class="input-group-addon">V</span>
+							</div>
+						</div>
+
+						
+						<div class="form-group">
+							<label for="iv-to">Ending voltage</label>
+							<div class="input-group">
+								<input type="text" name="iv-to" class="form-control" placeholder="Ending voltage" value="0" />
+								<span class="input-group-addon">V</span>
+							</div>
+						</div>
+
+						
+						<div class="form-group">
+							<label for="iv-scanrate">Scan rate</label>
+							<div class="input-group">
+								<input type="text" name="iv-scanrate" class="form-control" placeholder="Scan rate" value="0.5" />
+								<span class="input-group-addon">V/s</span>
+							</div>
+						</div>
+
+						<div class="form-group">
+							<label for="iv-nbpoints">Number of points</label>
+							<input type="number" max="100" name="iv-nbpoints" class="form-control" placeholder="100" value="100" />
+						</div>
+
+
+						<div class="form-group">
+							<label for="iv-delay">Equilibration time</label>
+							<div class="input-group">
+								<input type="number" max="100" name="iv-delay" class="form-control" placeholder="1" value="1" />
+								<span class="input-group-addon">s</span>
+							</div>
+						</div>
+						
+
+						<div class="form-group">
+
+							<div class="btn-group" role="group">
+								
+								<button class="btn btn-danger" name="stop" type="button">
+									<span class="glyphicon glyphicon-stop"></span>
+									Stop
+								</button>
+
+								<button class="btn btn-warning" name="pause" type="button">
+									<span class="glyphicon glyphicon-pause"></span>
+									Pause
+								</button>
+
+								<button class="btn btn-success" name="start" type="button">
+									<span class="glyphicon glyphicon-play"></span>
+									Start
+								</button>
+
+
+								<button class="btn btn-primary" name="update" type="button">
+									<span class="glyphicon glyphicon-reload"></span>
+									Update
+								</button>
+
+								<button class="btn btn-default" name="download" type="button">
+									<span class="glyphicon glyphicon-download-alt"></span>
+									Download results
+								</button>
+
+							</div>
+						</div>
+					</form>
+
+				</div>
+			</div>
+
+		</div>
+
+
+		<div class="col-lg-4">
+
+			<div class="panel panel-default">
+
+				<div class="panel-heading">
+					Influx DB
+				</div>
+
+				<div class="panel-body">
+
+					<form class="form" id="form-influxdb">
+
+						<div class="form-group">
+							<label for="host">Host</label>
+							<input type="text" name="host" id="host" class="form-control" placeholder="InfluxDB host" />
+						</div>
+
+
+						<div class="form-group">
+							<label for="username">Username</label>
+							<input type="text" name="username" id="username" class="form-control" placeholder="InfluxDB username" />
+						</div>
+
+
+						<div class="form-group">
+							<label for="password">Password</label>
+							<input type="text" name="password" id="password" class="form-control" placeholder="InfluxDB password" />
+						</div>
+
+
+						<div class="form-group">
+							<label for="port">Port (default=80)</label>
+							<input type="text" name="port" id="port" class="form-control" placeholder="InfluxDB port" />
+						</div>
+
+
+						<div class="form-group">
+							<label for="db">Database</label>
+							<input type="text" name="database" id="db" class="form-control" placeholder="InfluxDB database" />
+						</div>
+						
+
+						<div class="form-group">
+
+							<div class="btn-group" role="group">
+								<button class="btn btn-primary" name="apply" type="submit">
+									Apply
+								</button>
+							</div>
+						</div>
+					</form>
+				</div>
+			</div>
+		</div>
+	</div>
+
+    <div role="tabpanel" class="tab-pane active" id="results">
+
+
+		<div class="col-lg-12">
+
+			<div class="panel panel-default">
+
+				<div class="panel-heading">
+					Stability results
+
+					<div class="pull-right">
+
+						Time zone:
+						<div class="btn-group">
+							<button class="btn btn-xs btn-default time" data-time="60" type="button">
+								1min
+							</button>
+							<button class="btn btn-xs btn-default time" data-time="600"  type="button">
+								10min
+							</button>
+							<button class="btn btn-xs btn-default time" data-time="3600"  type="button">
+								1h
+							</button>
+							<button class="btn btn-xs btn-default time" data-time="86400"  type="button">
+								1d
+							</button>
+							<button class="btn btn-xs btn-default time" data-time="604800" type="button">
+								1w
+							</button>
+							<button class="btn btn-xs btn-default time" data-time="2592000" type="button">
+								1m
+							</button>
+						</div>
+
+						<div class="btn-group">
+							<button class="btn btn-xs btn-primary active" id="follow-time" type="button">
+								Follow latest data
+							</button>
+						</div>
+					</div>
+				</div>
+
+				<div class="panel-body" id="graphs">
+					<div id="graph-main" class="stability-graph">
 
 					</div>
 				</div>
-			</form>
-		</div>
-	</div>
-
-
-
-	<div class="panel panel-default">
-
-		<div class="panel-heading">
-			Influxdb configuration
-		</div>
-
-		<div class="panel-body">
-
-
-			<form class="form" id="form-influxdb">
-
-				<div class="form-group">
-					<label for="host">Host</label>
-					<input type="text" name="host" id="host" class="form-control" placeholder="InfluxDB host" />
-				</div>
-
-
-				<div class="form-group">
-					<label for="username">Username</label>
-					<input type="text" name="username" id="username" class="form-control" placeholder="InfluxDB username" />
-				</div>
-
-
-				<div class="form-group">
-					<label for="password">Password</label>
-					<input type="text" name="password" id="password" class="form-control" placeholder="InfluxDB password" />
-				</div>
-
-
-				<div class="form-group">
-					<label for="port">Port (default=80)</label>
-					<input type="text" name="port" id="port" class="form-control" placeholder="InfluxDB port" />
-				</div>
-
-
-				<div class="form-group">
-					<label for="db">Database</label>
-					<input type="text" name="database" id="db" class="form-control" placeholder="InfluxDB database" />
-				</div>
-				
-
-				<div class="form-group">
-
-					<div class="btn-group" role="group">
-						<button class="btn btn-primary" name="apply" type="submit">
-							Apply
-						</button>
-					</div>
-				</div>
-			</form>
-
-
-
-
-		</div>
-	</div>
-
-
-</div>
-
-
-<div class="col-lg-9">
-
-	<div class="panel panel-default">
-
-		<div class="panel-heading">
-			Stability results
-
-			<div class="pull-right">
-
-				Time zone:
-				<div class="btn-group">
-					<button class="btn btn-xs btn-default time" data-time="60" type="button">
-						1min
-					</button>
-					<button class="btn btn-xs btn-default time" data-time="600"  type="button">
-						10min
-					</button>
-					<button class="btn btn-xs btn-default time" data-time="3600"  type="button">
-						1h
-					</button>
-					<button class="btn btn-xs btn-default time" data-time="86400"  type="button">
-						1d
-					</button>
-					<button class="btn btn-xs btn-default time" data-time="604800" type="button">
-						1w
-					</button>
-					<button class="btn btn-xs btn-default time" data-time="2592000" type="button">
-						1m
-					</button>
-				</div>
-
-				<div class="btn-group">
-					<button class="btn btn-xs btn-primary active" id="follow-time" type="button">
-						Follow latest data
-					</button>
-				</div>
-			</div>
-		</div>
-
-		<div class="panel-body" id="graphs">
-			<div id="current" class="stability-graph">
-
-			</div>
-
-			<div id="voltage" class="stability-graph">
-
-			</div>
-
-			<div id="power" class="stability-graph">
 
 			</div>
 		</div>
@@ -364,13 +434,7 @@
 	</div>
 </div>
 
-
-<div class="col-lg-2">
-
-	<div id="tracestyle"></div>
 </div>
-
-
 
 <div class="modal fade" tabindex="-1" id="error-connection" role="dialog" aria-labelledby="mySmallModalLabel">
   <div class="modal-dialog">
@@ -399,11 +463,6 @@
     </div>
   </div>
 </div>
-
-
-</div>
-
-
 
 </body>
 </html>

@@ -1,1 +1,1 @@
-{"GUSTAV1":{"0":{},"2":{},"3":{"status":"running","starttime":1458676544590,"name":"test5","holdAt":"MPPT","sendrate":0,"trackrate":100,"iv-repetition":0,"iv-from":1.2,"iv-to":0,"iv-scanrate":0.5,"iv-nbpoints":100,"iv-delay":1},"4":{},"5":{},"6":{},"7":{}}}
+{"GUSTAV1":{"0":{},"1":{},"2":{},"3":{"status":"running","starttime":1459961669792,"name":"SomeName","holdAt":"MPPT","sendrate":1000,"trackrate":10,"iv-repetition":0,"iv-from":1.2,"iv-to":0,"iv-scanrate":0.5,"iv-nbpoints":100,"iv-delay":1},"4":{},"5":{},"6":{},"7":{}}}
