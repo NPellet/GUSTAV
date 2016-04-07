@@ -156,7 +156,7 @@ function getFilename( status ) {
 
 
 
-app.use('/public', express.static('public'));
+app.use(express.static('public'));
 var server = app.listen(3000);
 
 app.get('/', function (req, res) {
@@ -325,7 +325,7 @@ function registerSerialEvents( connection, portName ) {
 
 		var data2;
 		connection.data += d.toString('ascii');
-
+console.log( connection.data );
 		while( connection.data.indexOf(";") > -1 ) {
 
 			data2 = connection.data
@@ -395,7 +395,7 @@ function registerSerialEvents( connection, portName ) {
 
 				var calibration;
 //console.log( data2 );
-console.log( data2 );
+
 				data2 = data2.split(',');	
 
 				var deviceId = parseFloat( data2[ 1 ] );
@@ -458,6 +458,8 @@ function handshake( connection, portName, response, nameCheck ) {
 		  		var dataname = cleanupname( data.replace("*IDN? ", "").replace("*idn", "") );
 console.log( "DATA NAME:");
 console.log( dataname );
+dataname = "GUSTAV1";
+
 
 		  		if( nameCheck && nameCheck !== dataname && 1 == 2  ) {
 		  			response.error = true;
@@ -466,6 +468,7 @@ console.log( dataname );
 		  		} else { // Discovery mode => always ok
 		  			response.name = dataname;
 		  		}
+
 
 		  		var filename = cleanupfilename( dataname ) + ".json",
 		  			filepath = "./calibrations/" + filename;
@@ -724,16 +727,17 @@ function saveConfig() {
 
 
 function updateStatus( instrument, channelId, config ) {	
-console.log( config );
+
 	if( ! config ) {
 		return;
 	}
 
-	var device;
+	var device, portName;
 
 	for( var i in connectedDevices ) {
 		if( connectedDevices[ i ].name == instrument ) {
 			device = connectedDevices[ i ];
+			portName = i;
 			break;
 		}
 	}
@@ -761,7 +765,7 @@ console.log( config );
 			}
 
 			status[ instrument ][ channelId ] = config;
-			sendStatus( device, channelId, config, device.calibration[ i ], status[ instrument ][ channelId ] );
+			sendStatus( device, channelId, config, device.calibration[ i ], status[ instrument ][ channelId ], portName );
 		}
 	}
 
@@ -792,81 +796,94 @@ Number.prototype.noExponents= function(){
 }
 
 
+var queue = {};
 
 
-
-function sendStatus( instrument, channelId, config, calibration, status ) {
+function sendStatus( instrument, channelId, config, calibration, status, instrumentName ) {
 
 	var connection = instrument.connection;
 
 	var commands = {};
 
+	queue[ instrumentName ] = queue[ instrumentName ] || { processing: false, queue: [] };
 
-	commands["MEASurement:TRACk:SENDrate"] = config.sendrate;
-	commands["MEASurement:TRACk:RATE"] = config.trackrate;
-	commands["MEASurement:IV:STARt"] = getDACCodeFromVoltage( parseFloat( config["iv-from"] ), calibration );
-	commands["MEASurement:IV:STOP"] = getDACCodeFromVoltage( parseFloat( config["iv-to"] ), calibration );
-	commands["MEASurement:IV:SCANrate"] = getDACCodeFromDeltaVoltage( config["iv-scanrate"], calibration );
-	commands["MEASurement:IV:NBPOints"] = config["iv-nbpoints"];
-	commands["MEASurement:IV:DELAy"] = config["iv-delay"];
+
+	queue[ instrumentName ].queue.push( [ "MEASurement:TRACk:SENDrate", config.sendrate, channelId ] );
+	queue[ instrumentName ].queue.push( [ "MEASurement:TRACk:RATE", config.trackrate, channelId ] );
+	queue[ instrumentName ].queue.push( [ "MEASurement:IV:STARt", getDACCodeFromVoltage( parseFloat( config["iv-from"] ), calibration ), channelId ] );
+	queue[ instrumentName ].queue.push( [ "MEASurement:IV:STOP", getDACCodeFromVoltage( parseFloat( config["iv-to"] ), calibration ), channelId ] );
+	queue[ instrumentName ].queue.push( [ "MEASurement:IV:SCANrate", getDACCodeFromDeltaVoltage( config["iv-scanrate"], calibration ), channelId ] );
+	queue[ instrumentName ].queue.push( [ "MEASurement:IV:NBPOints", config["iv-nbpoints"], channelId ] );
+	queue[ instrumentName ].queue.push( [ "MEASurement:IV:DELAy", config["iv-delay"], channelId ] );
 /*
 	commands["CALIbration:DACOffset"] = calibration.DACOffset;
 	commands["CALIbration:DACSlope"] = calibration.DACSlope;
 	*/
 
-	commands["MEASurement:REGUlation"] = 0.01;
-	commands["CALIbration:VOLTage:ADCOffset"] = calibration.ADCOffsetVoltage;
-	commands["CALIbration:VOLTage:ADCSlope"] = calibration.ADCSlopeVoltage;
-	commands["CALIbration:CURRent:ADCOffset"] = calibration.ADCOffsetCurrent;
-	commands["CALIbration:CURRent:ADCSlope"] = calibration.ADCSlopeCurrent;
+	queue[ instrumentName ].queue.push( [ "MEASurement:REGUlation", 0.01, channelId ] );
+	queue[ instrumentName ].queue.push( [ "CALIbration:VOLTage:ADCOffset", calibration.ADCOffsetVoltage, channelId ] );
+	queue[ instrumentName ].queue.push( [ "CALIbration:VOLTage:ADCSlope", calibration.ADCSlopeVoltage, channelId ] );
+	queue[ instrumentName ].queue.push( [ "CALIbration:CURRent:ADCOffset", calibration.ADCOffsetCurrent, channelId ] );
+	queue[ instrumentName ].queue.push( [ "CALIbration:CURRent:ADCSlope", calibration.ADCSlopeCurrent, channelId ] );
 
-	commands["MEASurement:IV:DELAy"] = config["iv-delay"];
+	queue[ instrumentName ].queue.push( [ "MEASurement:IV:DELAy", config["iv-delay"], channelId ] );
 	
 
 	if( status.status == 'running' ) {
-		commands["MEASurement:MODE"] = 1;
+		queue[ instrumentName ].queue.push( [ "MEASurement:MODE", 1, channelId ] );
+	}
+
+	processQueue( queue[ instrumentName ], instrumentName );
+}
+
+
+function processQueue( queue, portName ) {
+
+	if( queue.processing ) {
+
+		return;
+	} 
+
+	var command = queue.queue.shift();
+
+
+console.log( command );
+	if( command ) {
+		while( command && ( isNaN( command[ 1 ] ) || command[ 1 ] == undefined ) ) {
+			command = queue.queue.shift();
+		}
+	}
+
+	if( ! command ) {
+
+		queue.processing = false;
+		setTimeout( function() {
+
+			processQueue( queue, portName );
+
+		}, 10000  );
+
+		return;
 	}
 
 
-setTimeout( function() {
+	queue.processing = true;
+/*console.log( portName, command[ 0 ] + ":CH" + command[ 2 ] + " " +  command[ 1 ].noExponents() + ";" );
+console.log( connectedDevices[ portName ] );
+*/
+	connectedDevices[ portName ].connection.write( command[ 0 ] + ":CH" + command[ 2 ] + " " +  command[ 1 ].noExponents() + ";", function( err, result ) {
+		console.log( err, result );
+		connectedDevices[ portName ].connection.flush(function() {
 
-		var keys = Object.keys( commands );
+			setTimeout( function() {
 
-		function cmd( i ) {
+				queue.processing = false;
+				processQueue( queue, portName );
 
-			var key = keys[ i ];
+			}, 100 );
 
-			if( ! key ) {
-				return;
-			}
+		} );
 
-			if( !isNaN( commands[ key ] ) && commands[ key ] !== undefined ) {
-
-			//	console.log( i + ":CH" + channelId + " " + Number( "" + commands[ i ] ) + ";" );
-		//	console.log( key + ":CH" + channelId + " " + Number( "" + commands[ key ] ) + ";" );
-		console.log( key + ":CH" + channelId + " " +  commands[ key ].noExponents() + ";" );
-				connection.write( key + ":CH" + channelId + " " +  commands[ key ].noExponents() + ";", function( err, result ) {
-					//console.log( err, result );
-					connection.flush(function() {
-						setTimeout( function() {
-	
-							cmd( i + 1 );
-						}, 500 );
-					});
-				} );
-				
-
-				
-			}
-
-		}
-
-		cmd( 0 );
-	
-	}, 3000 );
-
-
-
-
-
+	} );
 }
+
