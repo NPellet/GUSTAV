@@ -126,7 +126,7 @@ setInterval( function() {
 			// Error handling
 		} else {
 
-				
+
 			for( var i in trackData ) {
 
 				for( var j in trackData[ i ] ) {
@@ -201,8 +201,8 @@ function loadDevices() {
 function loadDevice( portName, instrumentName ) {
 
 
-	connectedDevices[ portName ] = { 
-		name: instrumentName, 
+	connectedDevices[ portName ] = {
+		name: instrumentName,
 		portName: portName,
 		connection: new serial.SerialPort( portName, params.serial.parameters ),
 		error: false,
@@ -243,7 +243,7 @@ function openConnection( connection, portName ) {
 				rejecter( connection );
 
 				return;
-			} 
+			}
 
 
 			connection.handshake = handshake( connection, portName, connection, connection.name ).then( function( handshakeResult ) {
@@ -256,7 +256,7 @@ function openConnection( connection, portName ) {
 
 					status[ connection.name ] = status[ connection.name ] || {};
 
-					updateStatus( connection.name, chanId, status[ connection.name ][ chanId ] );	
+					updateStatus( connection.name, chanId, status[ connection.name ][ chanId ] );
 				}
 
 				resolver( handshakeResult );
@@ -276,19 +276,19 @@ function getVoltageFromCode( delta, calibration ) {
 }*/
 
 function getVoltageFromCode( code, calibration ) {
-	
+
 	return code * calibration.ADCSlopeVoltage + calibration.ADCOffsetVoltage;
 }
 
 function getDACCodeFromVoltage( voltage, calibration ) {
-	
+
 	return Math.round( ( voltage - calibration.DACOffsetVoltage ) / calibration.DACSlopeVoltage );
 }
 
 
 
 function getCodeFromVoltage( voltage, calibration ) {
-	
+
 	return Math.round( ( voltage - calibration.ADCOffsetVoltage ) / calibration.ADCSlopeVoltage );
 }
 
@@ -302,7 +302,7 @@ function getCurrentFromCode( code, calibration ) {
 }
 
 function getCodeFromCurrent( current, calibration ) {
-	var code = ( current - calibration.ADCOffset ) / calibration.ADCSlope;	
+	var code = ( current - calibration.ADCOffset ) / calibration.ADCSlope;
 	return parseInt( code );
 }
 
@@ -336,7 +336,6 @@ function registerSerialEvents( connection, portName ) {
 		var data2;
 		connection.data += d.toString('ascii');
 
-console.log( connection.data, d );
 
 		while( connection.data.indexOf(";") > -1 ) {
 
@@ -346,7 +345,7 @@ console.log( connection.data, d );
 
 			if( data2.indexOf( '<IV' ) > -1 ) {
 
-				
+
 				data2 = data2.replace(">", "");
 				data2 = data2.split(",");
 
@@ -389,7 +388,7 @@ console.log( connection.data, d );
 
 					var itxw = itx.newWave( "current" );
 					itxw.setWaveform( current );
-					
+
 					var time = Math.round( ( Date.now() - statusChannel.starttime ) / 1000 );
 
 					var folderpath = "data/IVCurves/" + getFilename( statusChannel ) + "/";
@@ -421,7 +420,7 @@ console.log( connection.data, d );
 				var calibration;
 //console.log( data2 );
 
-				data2 = data2.split(',');	
+				data2 = data2.split(',');
 
 				var deviceId = parseFloat( data2[ 1 ] );
 
@@ -438,22 +437,22 @@ console.log( connection.data, d );
 
 					var voltage = Math.round( getVoltageFromCode( parseInt( data2[ 2 ] ), calibration ) * 1000000 )  / 1000000;
 					var current = Math.round( getCurrentFromCode( parseInt( data2[ 3 ] ), calibration ) * 1000000 ) / 1000000;
-					
+
 					var vmin = Math.round( getVoltageFromCode( parseInt( data2[ 4 ] ), calibration ) * 1000000 ) / 1000000;
 					var vmax = Math.round( getVoltageFromCode( parseInt( data2[ 5 ] ), calibration ) * 1000000 ) / 1000000;
-					
+
 					var cmin = Math.round( getCurrentFromCode( parseInt( data2[ 6 ] ), calibration ) * 1000000 ) / 1000000;
 					var cmax = Math.round( getCurrentFromCode( parseInt( data2[ 7 ] ), calibration ) * 1000000 ) / 1000000;
-//console.log( deviceId, voltage, current, voltage * current );
+
 					trackData[ connection.name ] = trackData[ connection.name ] || {};
 					trackData[ connection.name ][ deviceId ] = trackData[ connection.name ][ deviceId ] || { date: [], v: [], c: [], vmin: [], vmax: [], cmin: [], cmax: [], p: [] };
 
-console.log( voltage, current, deviceId );
+//console.log( voltage, current, deviceId );
 					trackData[ connection.name ][ deviceId ].date.push( Date.now() );
 					trackData[ connection.name ][ deviceId ].p.push( Math.round( current * voltage * 1000000 ) / 1000000 );
 					trackData[ connection.name ][ deviceId ].c.push( current );
 					trackData[ connection.name ][ deviceId ].v.push( voltage );
-					
+
 					trackData[ connection.name ][ deviceId ].vmin.push( vmin );
 					trackData[ connection.name ][ deviceId ].vmax.push( vmax );
 					trackData[ connection.name ][ deviceId ].cmin.push( cmin );
@@ -462,8 +461,8 @@ console.log( voltage, current, deviceId );
 			}
 
 			connection.data = connection.data.substr( connection.data.indexOf(";") + 1);
-				
-		}	
+
+		}
 	});
 }
 
@@ -483,10 +482,8 @@ function handshake( connection, portName, response, nameCheck ) {
 
 		  		var dataname = cleanupname( data.replace("*IDN? ", "").replace("*idn", "") );
 
-				dataname = "GUSTAV1";
-	
-
-		  		if( nameCheck && nameCheck !== dataname && 1 == 2  ) {
+				//dataname = "GUSTAV1";
+		  		if( nameCheck && nameCheck !== dataname ) {
 		  			response.error = true;
 		  			response.errorText = "Handshake has failed. The wrong device seem to be connected to this port. This can happen is you have switched the USB port of the device. Try removing the device and readding it.";
 		  			rejecter( response );
@@ -494,11 +491,8 @@ function handshake( connection, portName, response, nameCheck ) {
 		  			response.name = dataname;
 		  		}
 
-
 		  		var filename = cleanupfilename( dataname ) + ".json",
 		  			filepath = "./calibrations/" + filename;
-
-console.log("Through");
 
 		  		fs.open( filepath, "r", function( err ) {
 
@@ -523,8 +517,8 @@ console.log("Through");
 
 
 	  	setTimeout( function() {
-	  		console.log("IDN");
-		  	connection.connection.write("*IDN?;");	
+//	  		console.log("IDN");
+		  	connection.connection.write("*IDN?;");
 	  	}, 2000);
 	} );
 }
@@ -540,7 +534,7 @@ app.get("/params", function( req, res ) {
 app.get("/discover", function( req, res ) {
 
 	serial.list(function( err, ports ) {
-	  	
+
 	  var available = [];
 
 	  ports.forEach(function(port) {
@@ -586,7 +580,7 @@ app.get("/listMeasurements", function( req, res ) {
 
 		response.on("end", function( ) {
 
-			console.log( body );
+			//console.log( body );
 			try {
 				body = JSON.parse( body );
 			} catch ( e ) {
@@ -609,7 +603,7 @@ app.get("/listMeasurements", function( req, res ) {
 			});
 
 			res.send( body );
-		});		
+		});
 	} );
 
 	req.end();
@@ -635,7 +629,7 @@ app.get("/connect", function( req, res ) {
 app.get("/getChannels", function( req, res ) {
 
 	res.type("application/json");
-	
+
 	var allChannels = {};
 	var name;
 
@@ -643,27 +637,27 @@ app.get("/getChannels", function( req, res ) {
 
 		name = connectedDevices[ i ].name;
 		allChannels[ name ] = [];
-		
+
 		status[ name ] = status[ name ] || {};
 
 		if( connectedDevices[ i ].calibration && ! connectedDevices[ i ].error ) {
-			
+
 			for( var j = 0; j < connectedDevices[ i ].calibration.length; j ++ ) {
-				
+
 				status[ name ][ connectedDevices[ i ].calibration[ j ].channelId ] = status[ name ][ connectedDevices[ i ].calibration[ j ].channelId ] || {};
-				allChannels[ name ].push( 
-					extend( 
+				allChannels[ name ].push(
+					extend(
 						{},
 						params.status.default,
 						status[ name ][ connectedDevices[ i ].calibration[ j ].channelId ],
 						connectedDevices[ i ].calibration[ j ],
 						{ filename: getFilename( status[ name ][ connectedDevices[ i ].calibration[ j ].channelId ] ) }
 					)
-				);	
-			}	
+				);
+			}
 		}
 	}
-	
+
 	res.send( allChannels );
 } );
 
@@ -684,7 +678,7 @@ app.get(/\/startChannel\/([A-Za-z0-9,_-]+)\/([A-Za-z0-9,_-]+)/, function( req, r
 	config.status = "running";
 	config.starttime = Date.now();
 
-	
+
 	updateStatus( req.params[ '0' ], req.params[ '1' ], config );
 	res.send("ok");
 });
@@ -709,7 +703,7 @@ app.get(/\/stopChannel\/([A-Za-z0-9,_-]+)\/([A-Za-z0-9,_-]+)/	, function( req, r
 	trackData[ req.params[ '0'] ][ req.params[ '1' ] ].p = new Waveform();
 	trackData[ req.params[ '0'] ][ req.params[ '1' ] ].c = new Waveform();
 	trackData[ req.params[ '0'] ][ req.params[ '1' ] ].v = new Waveform();
-	
+
 	trackData[ req.params[ '0'] ][ req.params[ '1' ] ].vmin = new Waveform();
 	trackData[ req.params[ '0'] ][ req.params[ '1' ] ].vmax = new Waveform();
 	trackData[ req.params[ '0'] ][ req.params[ '1' ] ].cmin = new Waveform();
@@ -752,18 +746,18 @@ app.get(/\/download\/([A-Za-z0-9,_-]+)\/([A-Za-z0-9,_-]+)\/([A-Za-z0-9,_-]+)/, f
 
 	req.write( postString );
 
-	
+
 	req.on("response", function( response ) {
-		
+
 		var body = "";
 
 		response.on( "data", function( bdy ) {
-			
+
 			body += bdy.toString('utf8');
 		});
 
 		response.on( "end", function() {
-	
+
 			response = JSON.parse( body );
 
 
@@ -804,19 +798,19 @@ app.get(/\/download\/([A-Za-z0-9,_-]+)\/([A-Za-z0-9,_-]+)\/([A-Za-z0-9,_-]+)/, f
 
 						csv += "\n";
 					}
-					
+
 					res.type("text/csv");
 					res.set("Content-disposition", 'filename="' + measurement + '.csv"');
 					res.send( csv );
 				break;
 
 			}
-			
+
 
 		} );
 
 	})
-	
+
 
 	req.end();
 
@@ -853,7 +847,7 @@ function saveConfig() {
 
 var ivinterval = {};
 
-function updateStatus( instrument, channelId, config ) {	
+function updateStatus( instrument, channelId, config ) {
 
 	if( ! config ) {
 		return;
@@ -871,7 +865,7 @@ function updateStatus( instrument, channelId, config ) {
 	config['iv-delay'] = parseInt( config['iv-delay'] );
 	config['forbackthreshold'] = parseFloat( config['forbackthreshold'] );
 	config['backforthreshold'] = parseFloat( config['backforthreshold'] );
-	
+
 
 	var device, portName;
 
@@ -891,15 +885,15 @@ function updateStatus( instrument, channelId, config ) {
 		return false;
 	}
 
-	
+
 	for( var i = 0; i < device.calibration.length; i++ ) {
 
 		if( device.calibration[ i ].channelId == channelId ) {
-			
+
 			if( ivinterval[ portName ][ channelId ] && config["iv-repetition"] == 0 ) {
 				clearInterval( ivinterval[ portName ][ channelId ] );
 			} else if( ! ivinterval[ portName ][ channelId ] && config["iv-repetition"] > 0 && config[ 'iv-repetition'] !== null && ! isNaN( config[ 'iv-repetition' ] ) ) {
-				
+
 				ivinterval[ portName ][ channelId ] = setInterval( function() {
 
 					if( status[ instrument ][ channelId ].status == 'running' ) {
@@ -915,10 +909,10 @@ function updateStatus( instrument, channelId, config ) {
 
 							makingIv = false;
 							processQueue( queue[ portName ], portName );
-							
+
 						});
-					}	
-					
+					}
+
 
 
 				}, Math.min( Math.pow(2,31) - 1, config["iv-repetition"] ) );
@@ -939,7 +933,7 @@ function saveStatus() {
 
 Number.prototype.noExponents= function(){
     var data= String(this).split(/[eE]/);
-    if(data.length== 1) return data[0]; 
+    if(data.length== 1) return data[0];
 
     var  z= '', sign= this<0? '-':'',
     str= data[0].replace('.', ''),
@@ -950,7 +944,7 @@ Number.prototype.noExponents= function(){
         while(mag++) z += '0';
         return z + str.replace(/^\-/,'');
     }
-    mag -= str.length;  
+    mag -= str.length;
     while(mag--) z += '0';
     return str + z;
 }
@@ -982,7 +976,7 @@ function sendStatus( instrument, channelId, config, calibration, status, instrum
 
 	queue[ instrumentName ].queue.push( [ "MEASurement:REGUlation:POSItive ", config['forbackthreshold'], channelId ] );
 	queue[ instrumentName ].queue.push( [ "MEASurement:REGUlation:NEGAtive", config['backforthreshold'], channelId ] );
-	
+
 
 	queue[ instrumentName ].queue.push( [ "CALIbration:VOLTage:ADCOffset", calibration.ADCOffsetVoltage, channelId ] );
 	queue[ instrumentName ].queue.push( [ "CALIbration:VOLTage:ADCSlope", calibration.ADCSlopeVoltage, channelId ] );
@@ -990,17 +984,17 @@ function sendStatus( instrument, channelId, config, calibration, status, instrum
 	queue[ instrumentName ].queue.push( [ "CALIbration:CURRent:ADCSlope", calibration.ADCSlopeCurrent, channelId ] );
 
 	queue[ instrumentName ].queue.push( [ "MEASurement:IV:DELAy", config["iv-delay"], channelId ] );
-	
+
 
 	if( status.status == 'running' ) {
 
 		if( config.holdAt == 'MPPT' ) {
-			queue[ instrumentName ].queue.push( [ "MEASurement:MODE", 1, channelId ] );	
+			queue[ instrumentName ].queue.push( [ "MEASurement:MODE", 1, channelId ] );
 		} else {
-			queue[ instrumentName ].queue.push( [ "MEASurement:TARGet:VOLTage", getCodeFromVoltage( parseFloat( config.holdAt ), calibration ), channelId ] );	
+			queue[ instrumentName ].queue.push( [ "MEASurement:TARGet:VOLTage", getCodeFromVoltage( parseFloat( config.holdAt ), calibration ), channelId ] );
 			queue[ instrumentName ].queue.push( [ "MEASurement:MODE", 3, channelId ] );	 // Steady voltage
 		}
-		
+
 	}
 
 	processQueue( queue[ instrumentName ], instrumentName );
@@ -1012,7 +1006,7 @@ function processQueue( queue, portName ) {
 	if( queue.processing ) {
 
 		return;
-	} 
+	}
 
 	if( makingIv ) {
 		queue.processing = false;
@@ -1052,9 +1046,9 @@ function processQueue( queue, portName ) {
 		string += " " + command[ 1 ].noExponents();
 	}
 	string += ";";
-console.log( string );
+//console.log( string );
 	connectedDevices[ portName ].connection.write( string, function( err, result ) {
-		
+
 		connectedDevices[ portName ].connection.flush(function() {
 
 			setTimeout( function() {
@@ -1062,10 +1056,9 @@ console.log( string );
 				queue.processing = false;
 				processQueue( queue, portName );
 
-			}, 200 );
+			}, 100 );
 
 		} );
 
 	} );
 }
-

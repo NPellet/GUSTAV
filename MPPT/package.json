@@ -4,6 +4,10 @@
   "description": "The server and client application for the GUSTAV Hadès ageing setup",
   "main": "app.js",
   "dependencies": {
+    "body-parser": "^1.15.2",
+    "express": "^4.14.0",
+    "extend": "^3.0.0",
+    "influx": "^4.2.2",
     "serialport": "^2.0.6"
   }
 }
