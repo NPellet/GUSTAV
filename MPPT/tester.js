@@ -13,14 +13,18 @@ var serial = new serialport.SerialPort( "/dev/cu.wchusbserial1410", {
 
 var channelId = 3;
 
-var calibration = { 
-					"ADCSlopeVoltage":6.2495e-05,
-					"ADCOffsetVoltage":-1.0252,
-					"ADCSlopeCurrent":-6.2197e-7,
-					"ADCOffsetCurrent":0.020361,
-					"DACSlope":0.00099977,
-					"DACOffset":-2.0481
-				  };
+var calibration = {
+	"ADCSlopeCurrent":-6.5952e-07,
+	"ADCOffsetCurrent":0.021511,
+    "ADCSlopeVoltage":-6.2638e-05,
+    "ADCOffsetVoltage":2.0514,
+    "DACSlopeVoltage": -0.00099811,
+    "DACOffsetVoltage":2.0485,
+    "channelId": 3, 
+    "channelName":"Channel 3"
+};
+
+
 
 var commands = {};	
 commands["MEASurement:TRACk:SENDrate"] = 0;
@@ -30,27 +34,34 @@ commands["MEASurement:IV:STOP"] = getCodeFromVoltage( 0, calibration );
 commands["MEASurement:IV:SCANrate"] = getCodeFromDeltaVoltage( 1, calibration );
 commands["MEASurement:IV:NBPOints"] = 100;
 commands["MEASurement:IV:DELAy"] = 1;
-commands["MEASurement:REGUlation"] = 0.026;
+commands["MEASurement:REGUlation:POSItive"] = 0.0001;
+commands["MEASurement:REGUlation:NEGAtive"] = 0.0004;
+commands["MEASurement:REGulation:SWITchingtime:FORWard"] = 1;
+commands["MEASurement:REGulation:SWITchingtime:BACKward"] = 1;
 
-commands["CALIbration:DACOffset"] = calibration.DACOffset;
-commands["CALIbration:DACSlope"] = calibration.DACSlope;
+commands["CALIbration:DACOffset"] = calibration.DACOffsetVoltage;
+commands["CALIbration:DACSlope"] = calibration.DACSlopeVoltage;
 commands["CALIbration:CURRENT:ADCOffset"] = calibration.ADCOffsetCurrent;
 commands["CALIbration:CURRENT:ADCSlope"] = calibration.ADCSlopeCurrent;
-commands["NOISe:CURRent"] = 20;
+commands["NOISe:CURRent"] = 10;
 commands["NOISe:VOLTage"] = 4;
 
 commands["CALIbration:VOLTAGE:ADCOffset"] = calibration.ADCOffsetVoltage;
 commands["CALIbration:VOLTAGE:ADCSlope"] = calibration.ADCSlopeVoltage;
 
-commands["MEASurement:MODE"] = 2;
+commands["MEASurement:MODE"] = 1;
 
 
 var data = "";
 var noiseCurrent = 20;
 
+/*
+setTimeout( function() {
 
+	serial.write("MEASurement:IMMEdiate:CURRent:CH3;");
 
-
+}, 20000 );
+*/
 serial.on("open", function() {
 
 	var data = "";
@@ -66,36 +77,129 @@ serial.on("open", function() {
 		cmax: []
 	};
 
-	var waveDate = new Waveform();
-	var waveP = new Waveform();
-	var waveC = new Waveform();
-	var waveV = new Waveform();
-
-	var waveVMin = new Waveform();
-	var waveVMax = new Waveform();
-	var waveCMin = new Waveform();
-	var waveCMax = new Waveform();
 
 	var itxFile = new itxBuilder.ITXBuilder();
-	itxFile.newWave( "time_ms" ).setWaveform( waveDate );
-	itxFile.newWave( "power" ).setWaveform( waveP );
-	itxFile.newWave( "current" ).setWaveform( waveC );
-	itxFile.newWave( "voltage" ).setWaveform( waveV );
-	itxFile.newWave( "vmin" ).setWaveform( waveVMin );
-	itxFile.newWave( "vmax" ).setWaveform( waveVMax );
-	itxFile.newWave( "cmin" ).setWaveform( waveCMin );
-	itxFile.newWave( "cmax" ).setWaveform( waveCMax );
-		
+	
 	var date = Date.now();
 
 
-setInterval( function() {
+var reguPositive = 0.00005;
+var reguNegative = 0.0001;
+var switchingTime = 1;
+
+waveP = new Waveform();
+waveC = new Waveform();
+waveV = new Waveform();
+var waveDate = new Waveform();
+
+var lastChange = Date.now();
+
+var positiveRegulations = [ 0.0004, 0.0008, 0.0016, 0.0032, 0.0064, 0.0128, 0.0256, 0.0512, 0.1024, 0.2048 ];
+var switchingTimes = [ 0, 4, 16, 64, 256, 1024, 4096 ];
+
+function randomIntFromInterval(min,max)
+{
+    return Math.floor(Math.random()*(max-min+1)+min);
+}
+
+var results = {};
+
+var i = 0;
+
+function change() {
+
+/*	
+	if( reguPositive < 0.1024 ) {
+		reguPositive *= 2;
+		serial.write( "MEASurement:REGUlation:POSItive:CH3 " + reguPositive + ";");	
+	} else if( reguNegative < 0.1024 ) {
+		reguPositive = 0.0001;
+		reguNegative *= 2;
+		serial.write( "MEASurement:REGUlation:NEGAtive:CH3 " + reguNegative + ";");	
+	} else if( switchingTime < 2000 ) {
+		reguPositive = 0.0001;
+		reguNegative = 0.0001;
+		switchingTime *= 2;
+		serial.write( "MEASurement:REGUlation:SWITchingtime:CH3 " + reguNegative + ";");	
+	}*/
+
+	var posreguindex = randomIntFromInterval( 0, positiveRegulations.length - 1 );
+
+	results[ posreguindex ] = results[ posreguindex ] || [];
 	
-	noiseCurrent+=5;
-	serial.write( "NOISe:CURRent:CH3 " + ( noiseCurrent ) + ";");
-	console.log( noiseCurrent );
-	empt();
-}, 30000 );
+	var j = 0;
+	while( results[ posreguindex ].length == switchingTimes.length ) {
+		posreguindex = randomIntFromInterval( 0, positiveRegulations.length - 1 );
+		results[ posreguindex ] = results[ posreguindex ] || [];
+		j++;
+		if( j > 10000000 ) {
+			return;
+		}
+	}
+	
+
+	var switchingtimeindex = randomIntFromInterval( 0, switchingTimes.length - 1 );
+
+	while( results[ posreguindex ].indexOf( switchingtimeindex ) > -1 ) {
+		switchingtimeindex = randomIntFromInterval( 0, switchingTimes.length - 1 );
+	}
+	
+
+	results[ posreguindex ].push( switchingtimeindex );
+	
+	serial.write( "MEASurement:REGUlation:POSItive:CH3 " + positiveRegulations[ posreguindex ] + ";");	
+
+	setTimeout( function() {
+		serial.write( "MEASurement:REGulation:SWITchingtime:FORWard:CH3 " + switchingTimes[ switchingtimeindex ] + ";");	
+	}, 1000 );
+
+	waveP = new Waveform();
+	waveC = new Waveform();
+	waveV = new Waveform();
+	waveDate = new Waveform();
+
+	itxFile.newWave( "power_" + positiveRegulations[ posreguindex ] + "_" + reguNegative + "_" + switchingTimes[ switchingtimeindex ] ).setWaveform( waveP );
+	itxFile.newWave( "current" + positiveRegulations[ posreguindex ] + "_" + reguNegative + "_" + switchingTimes[ switchingtimeindex ] ).setWaveform( waveC );
+	itxFile.newWave( "voltage_" + positiveRegulations[ posreguindex ] + "_" + reguNegative + "_" + switchingTimes[ switchingtimeindex ] ).setWaveform( waveV );
+	itxFile.newWave( "time_ms_" + positiveRegulations[ posreguindex ] + "_" + reguNegative + "_" + switchingTimes[ switchingtimeindex ] ).setWaveform( waveDate );
+
+/*		
+	itxFile.newWave( "power_" + reguPositive + "_" + reguNegative + "_" + switchingTime ).setWaveform( waveP );
+	itxFile.newWave( "current" + reguPositive + "_" + reguNegative + "_" + switchingTime ).setWaveform( waveC );
+	itxFile.newWave( "voltage_" + reguPositive + "_" + reguNegative + "_" + switchingTime ).setWaveform( waveV );
+	itxFile.newWave( "time_ms_" + reguPositive + "_" + reguNegative + "_" + switchingTime ).setWaveform( waveDate );
+*/
+
+	var lastChange = Date.now();
+}
+
+
+
+waveP = new Waveform();
+waveC = new Waveform();
+waveV = new Waveform();
+
+current_code = new Waveform();
+voltage_code = new Waveform();
+
+itxFile.newWave( "current_code" ).setWaveform( current_code );
+itxFile.newWave( "voltage_code" ).setWaveform( voltage_code );
+
+var repetition = 60000;
+var threshold = 40000;
+
+var equilibrating = true;
+
+setTimeout( function() {
+	
+	setInterval( function() {
+		change();	
+	}, 60000);
+
+	equilibrating = false;
+	
+}, 60000 );
+
 
 /*
 	setTimeout( function() {
@@ -164,7 +268,10 @@ setInterval( function() {
 
 		fs.writeFileSync( "data_" + date + ".itx", itxFile.getFile() );
 
-	}, 2000 );
+	}, 20000 );
+
+	var recording = false;
+	var iterator = 0;
 
 	serial.on( "data", function( d ) {
 
@@ -174,59 +281,18 @@ setInterval( function() {
 
 		while( data.indexOf(";") > -1 ) {
 
-			console.log( data );
 
 			data2 = data
 				.substr( 0, data.indexOf(";") )
 				.replace( ';', '' );
-			if( data2.indexOf( '<IV' ) > -1 ) {
 
-				data2 = data2.replace(">", "");
-				data2 = data2.split(",");
+			data = data.substr( data.indexOf(";") + 1);
 
-				data2.shift();
-				var deviceId = data2.shift();
+			if( data2.indexOf("<TRAC" ) > -1 ) {
 
-				var statusChannel = status[ connection.name ][ deviceId ];
-
-				if( statusChannel ) {
-
-					var nbPoints = data2.shift();
-
-					var nbpoints = data2.length / 2;
-
-					var voltage = new Waveform().setUnit("V");
-					var current = new Waveform().setUnit("A");
-
-					for( var i = 0; i < nbpoints; i ++ ) {
-						voltage.push( getVoltageFromCode( parseInt( data2[ i ] ), calibration ) );
-					}
-
-					for( var i = nbpoints; i < nbpoints * 2; i ++ ) {
-						current.push( getCurrentFromCode( parseInt( data2[ i ] ), calibration ) );
-					}
-
-
-					var itx = new itxBuilder.ITXBuilder();
-
-					var itxw = itx.newWave( "voltage" );
-					itxw.setWaveform( voltage );
-
-					var itxw = itx.newWave( "current" );
-					itxw.setWaveform( current );
-					
-					var time = Math.round( ( Date.now() - statusChannel.starttime ) / 1000 );
-
-					fs.writeFile("tester/IVCurves/" + time + ".itx", itx.getFile(), function( err ) {
-
-						if( err ) {
-							console.error("Can not save IV curve. Error was " + err.toString() );
-						}
-
-					} );
+				if( Date.now() - lastChange < threshold || equilibrating ) {
+					continue;
 				}
-
-			} else if( data2.indexOf("<TRAC" ) > -1 ) {
 
 				//fs.appendFileSync('run.txt', data2 + "\n" );
 
@@ -234,30 +300,44 @@ setInterval( function() {
 
 				var deviceId = parseFloat( data2[ 1 ] );
 			
-				var voltage = Math.round( getVoltageFromCode( parseInt( data2[ 2 ] ), calibration ) * 1000000 )  / 1000000;
+				var voltage = Math.round( getVoltageFromCode( parseInt( data2[ 2 ] ), calibration ) * 1000000 ) / 1000000;
 				var current = Math.round( getCurrentFromCode( parseInt( data2[ 3 ] ), calibration ) * 1000000 ) / 1000000;
 				
-				console.log( getVoltageFromCode( parseInt( data2[ 2 ] ), calibration ), getCurrentFromCode( parseInt( data2[ 3 ] ), calibration ) );	
-				var vmin = Math.round( getVoltageFromCode( parseInt( data2[ 4 ] ), calibration ) * 1000000 ) / 1000000;
-				var vmax = Math.round( getVoltageFromCode( parseInt( data2[ 5 ] ), calibration ) * 1000000 ) / 1000000;
-				
-				var cmin = Math.round( getCurrentFromCode( parseInt( data2[ 6 ] ), calibration ) * 1000000 ) / 1000000;
-				var cmax = Math.round( getCurrentFromCode( parseInt( data2[ 7 ] ), calibration ) * 1000000 ) / 1000000;
-
-				waveDate.push( ( Date.now() - date ) / 1000 );
+				waveDate.push( ( Date.now() - lastChange ) / 1000 );
 				waveP.push( Math.round( current * voltage * 1000000 ) / 1000000 );
 				waveC.push( current );
 				waveV.push( voltage );
-				
-				waveVMin.push( vmin );
-				waveVMax.push( vmax );
-
-				waveCMin.push( cmin );
-				waveCMax.push( cmax );
 			}
 
-			data = data.substr( data.indexOf(";") + 1);
+			
 		}	
+
+
+		if( (regResult = /MEASurement:IMMEdiate:CURRent:CH([0-9]+)\s([0-9]{1,6})/.exec( data2 ) ) ) {
+
+			current_code.push( regResult[ 2 ] );
+			serial.write( "MEASurement:IMMEdiate:VOLTage:CH" + channelId + ";" );	
+
+		} else if ( (regResult = /MEASurement:IMMEdiate:VOLTage:CH([0-9]+)\s([0-9]{1,6})/.exec( data2 ) ) ) {
+
+			iterator++;
+			console.log( "Voltage code: " + regResult[ 2 ] );
+
+			voltage_code.push( regResult[ 2 ] );
+
+			if( iterator >= 100000 ) {
+				
+				iterator = 0;
+
+
+			} else {
+
+				serial.write( "MEASurement:IMMEdiate:CURRent:CH" + channelId + ";" );	
+			}
+
+		}
+
+
 	});
 
 
@@ -280,6 +360,7 @@ setInterval( function() {
 		//	console.log( key + ":CH" + channelId + " " + Number( "" + commands[ key ] ) + ";" );
 		console.log(  key + ":CH" + channelId + " " + commands[ key ].noExponents() + ";" );
 				serial.write( key + ":CH" + channelId + " " +  commands[ key ].noExponents() + ";", function( err, result ) {
+
 					//console.log( err, result );
 					serial.flush(function() {
 setTimeout( function() {
