@@ -1,13 +1,13 @@
 <!doctype html>
 <html>
-<head>	
-	
+<head>
+
 	<script data-main="js/main" src="./lib/requirejs/require.js"></script>
 	<link rel="stylesheet" href="/css/style.css" />
-	
+
 	<link rel="stylesheet" href="/lib/bootstrap/dist/css/bootstrap.min.css" />
 	<link rel="stylesheet" href="/lib/mjolnic-bootstrap-colorpicker/dist/css/bootstrap-colorpicker.min.css" />
-	
+
 	<link href='https://fonts.googleapis.com/css?family=Abril+Fatface' rel='stylesheet' type='text/css'>
 
 <!--
@@ -20,13 +20,13 @@
 
 
 <div class="page-header">
-	
+
 	<div class="pull-right col-sm-2" id="header-tabs">
 
 		<ul class="nav nav-tabs nav-justified" role="tablist">
-		  <li role="presentation" class="active"><a href="#results" role="tab" data-toggle="tab">Results</a></li>
+		  <li role="presentation" class="active"><a href="#results" role="tab" data-toggle="tab" id="tab-results">Results</a></li>
 		  <li role="presentation"><a href="#configuration" role="tab" data-toggle="tab">Configuration</a></li>
-		  
+
 		</ul>
 	</div>
 
@@ -49,7 +49,7 @@
 
 
  <div class="tab-content">
-    
+
     <div role="tabpanel" class="tab-pane" id="configuration">
 
 
@@ -66,9 +66,9 @@
 					<form class="form-horizontal" id="form-discovery">
 
 						<div class="form-group">
-							
+
 							<label for="port-list" class="col-sm-2 control-label">Port</label>
-							
+
 							<div class="col-sm-10">
 								<select name="ports" id="port-list" class="form-control ports">
 									<option selected="selected" disabled="disabled">Press refresh to update the list</option>
@@ -77,8 +77,11 @@
 						</div>
 
 						<div class="form-group">
-							<div class="btn-group pull-right">
-								
+
+							<label class="col-sm-2 control-label"></label>
+
+							<div class="btn-group">
+
 								<button type="button" data-text-searching="Searching... " data-text-search="Refresh" data-text-error="Request error" class="btn btn-default" id="discover">
 									Refresh
 								</button>
@@ -92,7 +95,7 @@
 
 					</form>
 
-					
+
 					<ul id="connected-devices" class="list-group">
 
 					</ul>
@@ -126,7 +129,7 @@
 					</div>
 
 					<div class="btn-group" role="group">
-						
+
 						<button class="btn btn-success" name="start" type="button">
 							<span class="glyphicon glyphicon-start"></span>
 							Start
@@ -139,7 +142,7 @@
 
 
 		</div>
-			
+
 
 		<div class="col-lg-4">
 
@@ -210,7 +213,7 @@
 							</select>
 						</div>
 
-					
+
 
 						<div class="form-group">
 							<label for="trackrate">Sampling rate</label>
@@ -219,7 +222,7 @@
 								<option value="10">100 samples per second</option>
 								<option value="100">10 samples per second</option>
 								<option value="1000">1 sample per second</option>
-								
+
 							</select>
 						</div>
 
@@ -257,7 +260,7 @@
 							</select>
 						</div>
 
-					
+
 						<h4>j-V curves</h4>
 
 
@@ -273,7 +276,7 @@
 								<option value="21600000">6 hours</option>
 								<option value="86400000">1 day</option>
 							</select>
-							
+
 						</div>
 
 
@@ -285,7 +288,7 @@
 							</div>
 						</div>
 
-						
+
 						<div class="form-group">
 							<label for="iv-to">Ending voltage</label>
 							<div class="input-group">
@@ -294,7 +297,7 @@
 							</div>
 						</div>
 
-						
+
 						<div class="form-group">
 							<label for="iv-scanrate">Scan rate</label>
 							<div class="input-group">
@@ -316,12 +319,12 @@
 								<span class="input-group-addon">s</span>
 							</div>
 						</div>
-						
+
 
 						<div class="form-group">
 
 							<div class="btn-group" role="group">
-								
+
 								<button class="btn btn-danger" name="stop" type="button">
 									<span class="glyphicon glyphicon-stop"></span>
 									Stop
@@ -398,7 +401,7 @@
 							<label for="db">Database</label>
 							<input type="text" name="database" id="db" class="form-control" placeholder="InfluxDB database" />
 						</div>
-						
+
 
 						<div class="form-group">
 
@@ -484,12 +487,12 @@
       	</div>
 
     	<div class="modal-body">
-    		
+
     		<p>Unfortunately, no connection to <span class="portname"></span> could be established.</p>
     		<p>Check that the port is not already busy</p>
     		<p>If you are sure that the port address corresponds to a recognisable GUSTAV device, please contact us for further assistance</p>
     		<p>The error returned by the system was <code class="errordetails"></code></p>
-    	</div>  	
+    	</div>
 
     	<div class="modal-footer">
 	        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>

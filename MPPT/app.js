@@ -22,6 +22,7 @@ var status = JSON.parse( fs.readFileSync( 'status.json' ) );
 var params = JSON.parse( fs.readFileSync( 'params.json' ) );
 var config = JSON.parse( fs.readFileSync( 'config.json' ) );
 
+var silentClose = false;
 
 influx.setConfig( config.influxdb );
 influx.restartServer( );
@@ -54,6 +55,10 @@ setInterval( function() {
 
 			var data = [];
 
+			if( trackData[ i ][ j ].date.length == 0 ) {
+				continue;
+			}
+			
 			for( var k = 0, l = trackData[ i ][ j ].date.length; k < l; k ++ ) {
 				data.push( [ {
 
@@ -165,12 +170,12 @@ app.get('/', function (req, res) {
 
 
 var connectedDevices = {};
-function saveDevice( portname, setupname ) {
+function saveDevices( ) {
 
 	var ini = "";
 
 	for( var i in connectedDevices ) {
-		ini += i + "=" + connectedDevices[ i ].name + "\n";
+		ini += i + "\n";
 	}
 
 	fs.writeFileSync( "devices.ini", ini );
@@ -187,9 +192,7 @@ function loadDevices() {
 			return;
 		}
 
-		iniLine = iniLine.split("=");
-
-		loadDevice( iniLine[ 0 ], iniLine[ 1 ] ).then( function() {
+		loadDevice( iniLine ).then( function() {
 
 		}, function() {
 			console.log("Connection from ini file has failed...");
@@ -198,21 +201,16 @@ function loadDevices() {
 }
 
 
-function loadDevice( portName, instrumentName ) {
-
+function loadDevice( portName ) {
 
 	connectedDevices[ portName ] = {
-		name: instrumentName,
 		portName: portName,
 		connection: new serial.SerialPort( portName, params.serial.parameters ),
 		error: false,
 		errorText: false
 	};
 
-	console.log( portName, params.serial.parameters );
-
 	registerSerialEvents( connectedDevices[ portName ], portName );
-
 	return openConnection( connectedDevices[ portName ], portName );
 
 }
@@ -224,11 +222,10 @@ function openConnection( connection, portName ) {
 		connection.connection.open( function( err ) {
 
 			connection.error = false;
-
+console.log( err );
 			if( err ) {
 				connection.error = true;
 				connection.errorText = err.toString();
-
 
 				setTimeout( function() {
 
@@ -245,9 +242,8 @@ function openConnection( connection, portName ) {
 				return;
 			}
 
-
-			connection.handshake = handshake( connection, portName, connection, connection.name ).then( function( handshakeResult ) {
-
+			connection.handshake = handshake( connection, portName, connection ).then( function( handshakeResult ) {
+				console.log("Handshake is a success");
 				var chanId;
 
 				for( var i = 0; i < connection.calibration.length; i ++ ) {
@@ -255,13 +251,13 @@ function openConnection( connection, portName ) {
 					chanId = connection.calibration[ i ].channelId;
 
 					status[ connection.name ] = status[ connection.name ] || {};
+					status[ connection.name ][ chanId ] = status[ connection.name ][ chanId ] || {};
 
 					updateStatus( connection.name, chanId, status[ connection.name ][ chanId ] );
 				}
 
 				resolver( handshakeResult );
 			}, function( handshakeResult ) {
-
 
 				console.error("Handshake has failed");
 				rejecter( handshakeResult );
@@ -316,6 +312,10 @@ function registerSerialEvents( connection, portName ) {
 
 	connection.connection.on( "close", function() {
 
+		if( silentClose ) {
+			silentClose = false;
+			return;
+		}
 		connection.error = true;
 		connection.errorText = "Connection lost";
 
@@ -447,7 +447,7 @@ function registerSerialEvents( connection, portName ) {
 					trackData[ connection.name ] = trackData[ connection.name ] || {};
 					trackData[ connection.name ][ deviceId ] = trackData[ connection.name ][ deviceId ] || { date: [], v: [], c: [], vmin: [], vmax: [], cmin: [], cmax: [], p: [] };
 
-//console.log( voltage, current, deviceId );
+//console.log( data2, voltage, current, deviceId );
 					trackData[ connection.name ][ deviceId ].date.push( Date.now() );
 					trackData[ connection.name ][ deviceId ].p.push( Math.round( current * voltage * 1000000 ) / 1000000 );
 					trackData[ connection.name ][ deviceId ].c.push( current );
@@ -467,32 +467,24 @@ function registerSerialEvents( connection, portName ) {
 }
 
 
-function handshake( connection, portName, response, nameCheck ) {
-
+function handshake( connection, portName, response ) {
 	return new Promise( function( resolver, rejecter ) {
 
 		var data = "",
 			listener = function( dataReceived ) {
 
 	  		data += dataReceived.toString('ascii');
-
 	  		if( data.indexOf(";") > -1 ) {
 
+					if( connectionTimeout ) {
+						clearTimeout( connectionTimeout );
+					}
+
 			  	connection.connection.removeListener( 'data', listener );
-
 		  		var dataname = cleanupname( data.replace("*IDN? ", "").replace("*idn", "") );
-
-				//dataname = "GUSTAV1";
-		  		if( nameCheck && nameCheck !== dataname ) {
-		  			response.error = true;
-		  			response.errorText = "Handshake has failed. The wrong device seem to be connected to this port. This can happen is you have switched the USB port of the device. Try removing the device and readding it.";
-		  			rejecter( response );
-		  		} else { // Discovery mode => always ok
-		  			response.name = dataname;
-		  		}
-
 		  		var filename = cleanupfilename( dataname ) + ".json",
 		  			filepath = "./calibrations/" + filename;
+					connection.name = dataname;
 
 		  		fs.open( filepath, "r", function( err ) {
 
@@ -500,11 +492,15 @@ function handshake( connection, portName, response, nameCheck ) {
 
 		  				response.error = true;
 		  				response.errorText = "No calibration file was found for " + dataname + ". Name of missing file is " + filename;
+							silentClose = true;
+							connection.connection.close( function() {
+									rejecter( response );
+							});
 
-		  				rejecter( response );
+
 
 		  			} else {
-
+console.log('File is getting parsed');
 		  				connection.calibration = JSON.parse( fs.readFileSync( filepath ) );
 		  				resolver( response );
 		  			}
@@ -512,12 +508,21 @@ function handshake( connection, portName, response, nameCheck ) {
 		  		} );
 			}
 	  	};
-
 	  	connection.connection.on('data', listener );
 
+			var connectionTimeout = setTimeout( function() {
+  				response.error = true;
+  				response.errorText = "Device is not responding to the *IDN? command. Try resetting or rebooting the device";
+					silentClose = true;
+					connection.connection.close( function() {
+							rejecter( response );
+					});
+
+
+			}, 5000 );
 
 	  	setTimeout( function() {
-//	  		console.log("IDN");
+	  		console.log("Sending IDN command");
 		  	connection.connection.write("*IDN?;");
 	  	}, 2000);
 	} );
@@ -617,7 +622,7 @@ app.get("/connect", function( req, res ) {
 
 	loadDevice( portName, false ).then( function( response ) {
 
-		saveDevice( portName, response.name );
+		saveDevices( );
 
 		res.send( response );
 	}, function( response ) {
@@ -667,6 +672,18 @@ app.get("/getConnectedDevices", function( req, res ) {
 	res.send( connectedDevices );
 
 } );
+
+app.get("/removeDevice", function( req, res ) {
+
+	var deviceName = req.query.deviceName;
+	for( var i in connectedDevices ) {
+		if( connectedDevices[ i ].name == deviceName ) {
+			delete connectedDevices[ i ];
+			saveDevices();
+		}
+	}
+} );
+
 
 app.get('/getCurrentStatus', function( req, res ) {
 	res.type("application/json");
@@ -868,7 +885,6 @@ function updateStatus( instrument, channelId, config ) {
 
 
 	var device, portName;
-
 	for( var i in connectedDevices ) {
 		if( connectedDevices[ i ].name == instrument ) {
 			device = connectedDevices[ i ];
@@ -927,7 +943,7 @@ function updateStatus( instrument, channelId, config ) {
 }
 
 function saveStatus() {
-	fs.writeFileSync( "status.json", JSON.stringify( status ) );
+	fs.writeFileSync( "status.json", JSON.stringify( status, undefined, "\t" ) );
 }
 
 
@@ -974,7 +990,7 @@ function sendStatus( instrument, channelId, config, calibration, status, instrum
 	commands["CALIbration:DACSlope"] = calibration.DACSlope;
 	*/
 
-	queue[ instrumentName ].queue.push( [ "MEASurement:REGUlation:POSItive ", config['forbackthreshold'], channelId ] );
+	queue[ instrumentName ].queue.push( [ "MEASurement:REGUlation:POSItive", config['forbackthreshold'], channelId ] );
 	queue[ instrumentName ].queue.push( [ "MEASurement:REGUlation:NEGAtive", config['backforthreshold'], channelId ] );
 
 
@@ -1046,7 +1062,7 @@ function processQueue( queue, portName ) {
 		string += " " + command[ 1 ].noExponents();
 	}
 	string += ";";
-//console.log( string );
+
 	connectedDevices[ portName ].connection.write( string, function( err, result ) {
 
 		connectedDevices[ portName ].connection.flush(function() {
@@ -1056,7 +1072,7 @@ function processQueue( queue, portName ) {
 				queue.processing = false;
 				processQueue( queue, portName );
 
-			}, 100 );
+			}, 300 );
 
 		} );
 
