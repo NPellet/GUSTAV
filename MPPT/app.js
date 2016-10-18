@@ -589,7 +589,7 @@ app.get("/listMeasurements", function( req, res ) {
 			try {
 				body = JSON.parse( body );
 			} catch ( e ) {
-				body = {};
+				body = [];
 			}
 
 			var regex = /(.*)_([0-9]*)$/;

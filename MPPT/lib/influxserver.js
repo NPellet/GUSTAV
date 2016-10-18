@@ -255,6 +255,39 @@ app.get("/export", function( req, res ) {
 
 
 
+app.get("/showMeasurements", function( req, res ) {
+
+    /*function getFromTo( results, index ) {
+
+        client.query("SELECT voltage,time FROM \"" + results[ index ].name + "\" ORDER BY time ASC limit 1; SELECT voltage,time FROM \"" + results[ index ].name + "\" ORDER BY time DESC limit 1;", function( err, res ) {
+
+            if( err ) {
+            
+            } else {
+                
+            
+                if( res[ 0 ][ 0 ] && res[0][0].time && res[1][0] && res[ 1 ][ 0 ].time ) {
+                    results[ index ].from = new Date( res[ 0 ][ 0 ].voltage );
+                    results[ index ].to = new Date( res[ 1 ][ 0 ].voltage );
+                }
+
+            }
+            if( results.length == index + 1 ) {
+                res.send( JSON.stringify( results ) );
+            } else {
+                getFromTo( results, index + 1 );
+            }
+        });
+    }*/
+
+    client.query("SHOW MEASUREMENTS", function( err, results ) {
+
+        res.send( JSON.stringify( results[ 0 ] ) );
+
+    });
+});
+
+
 
 function restartServer() {
 
