@@ -291,9 +291,11 @@ define( [ 'json!params', 'js/influxdb', 'jsgraph', 'tinycolor', 'bootstrap', 'po
 	 	});
 
 
-		$("#form-device").on("click", "button[name=download]", function() {
-			document.location.href = "/downloadChannel/" + currentInstrument + "/" + currentChannel;
-	 	});
+		$("button[name=download]").on('click', function() {
+			$("#downloadpane").mask("Your download is being prepared. This can take a few minutes", "#99ccff", "#00264d");
+			document.getElementById('downloadframe').src = "/download/" + $("#list-results-list").prop('value') + "/" + $("#list-results-grouping").prop('value') + "/" + $("#list-results-format").prop('value');
+		});
+
 
 
 		$("input[name=name]").on( "keyup", function() {

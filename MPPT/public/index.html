@@ -358,6 +358,66 @@
 		</div>
 
 
+
+		<div class="col-lg-4">
+
+			<div class="panel panel-default">
+
+				<div class="panel-heading">
+					Download results
+				</div>
+
+				<div class="panel-body" id="downloadpane">
+
+					
+					<button class="btn btn-default" name="list-results" type="button">
+						<span class="glyphicon glyphicon-download-alt"></span>List results
+					</button>
+
+
+					<form class="form form-download">
+
+						<div class="form-group">
+							<label for="list-results-list">Download measurement</label>
+							<select name="list-results-list" id="list-results-list" class="form-control"></select>
+						</div>
+
+
+						<div class="form-group">
+							<label for="list-results-grouping">Grouping</label>
+							<select name="list-results-grouping" id="list-results-grouping" class="form-control">
+								<option value="1">1 second</option>
+								<option value="5">5 seconds</option>
+								<option value="10">10 seconds</option>
+								<option value="60">1 minute</option>
+								<option value="600">10 minute</option>
+								<option value="3600">1 hour</option>
+							</select>
+						</div>
+
+
+						<div class="form-group">
+							<label for="list-results-format">Format</label>
+							<select name="list-results-format" id="list-results-format" class="form-control">
+								<option value="itx">IGOR text file</option>
+								<option value="csv">CSV</option>
+							</select>
+						</div>
+
+
+						<button class="btn btn-default" name="download" type="button">
+							<span class="glyphicon glyphicon-download-alt"></span>Download results
+						</button>
+
+
+					</form>
+					
+
+				</div>
+			</div>
+		
+
+		</div>
 		<div class="col-lg-4">
 
 			<div class="panel panel-default">
@@ -497,6 +557,10 @@
     </div>
   </div>
 </div>
+
+
+<iframe id="downloadframe" style="display:none;"></iframe>
+
 
 </body>
 </html>
