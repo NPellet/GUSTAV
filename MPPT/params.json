@@ -2,8 +2,8 @@
 	"serial": {
 		"parameters": {
 			"baudrate": 57600,
-		    "dataBits": 8,  
-		  
+		    "dataBits": 8,
+
 		    "stopBits": 1
 		},
 
@@ -11,21 +11,21 @@
 		"retryInterval": 2000
 	},
 	"client": {
-		"graphRefreshRate": 1000
+		"graphRefreshRate": 100
 	},
 
 	"status": {
 		"default": {
 			"status": "stopped",
 			"holdAt": "MPPT",
-			"trackrate": 10,
+			"trackrate": 1000,
 			"sendrate": 1000,
 			"iv-from": 1.2,
 			"iv-to": 0,
 			"iv-scanrate": 0.5,
 			"iv-nbpoints": 100,
-			"forbackthreshold": 0.1024,
-			"backforthreshold": 0.1024
+			"forbackthreshold": 0,
+			"backforthreshold": 0
 		}
 	},
 

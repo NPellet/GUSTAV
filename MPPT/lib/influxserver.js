@@ -17,7 +17,7 @@ var configInfluxDb = {
 
 var client;
 
-app.use( bodyParser.json() ); 
+app.use( bodyParser.json() );
 
 
 var ip = util.getIp();
@@ -37,7 +37,7 @@ app.use(function (req, res, next) {
 
 
 app.get('/makeDB', function (req, res) {
-  
+
   client.getDatabaseNames( function( err, databases ) {
 
         if (err) {
@@ -50,7 +50,7 @@ app.get('/makeDB', function (req, res) {
             client.createDatabase(database, function (err) {
                 if (err) throw err
                 res.send('Database '+database+' created');
-                
+
             })
         } else {
             res.send('Database ' + database + ' exists');
@@ -72,18 +72,18 @@ app.post('/saveData', function( req, res ) {
         return;
     }
 
-    
+
     var promises = [];
 
     function saveData( i, error ) {
-        
+
         if( i == req.body.length ) {    // Done
 
             if( error ) {
 
                 res.send( {
                     status: 0,
-                    error: err
+                    error: error
                 } );
             } else {
 
@@ -112,16 +112,16 @@ app.post('/saveData', function( req, res ) {
         } );
     }
 
-    
+
     saveData( 0, false );
-    
+
 
 } );
 
 
 
 app.get("/getData", function( req, res ) {
-    
+
     if( ! client ) {
         res.send( {
             status: 0,
@@ -180,14 +180,14 @@ app.get("/getData", function( req, res ) {
             dataMinMax.push( results[ 0 ][ i ].max );
         }
 
-        
-        res.send( { 
+
+        res.send( {
 
             status: 1,
             error: false,
             data: {
                 mean: dataMean,
-                minmax: dataMinMax    
+                minmax: dataMinMax
             }
         } );
     } );
@@ -206,10 +206,10 @@ app.get("/export", function( req, res ) {
     }
 
     var cellName = req.body.cellName;
-    
+
     console.log( cellName );
     client.query( "SELECT voltage, voltagemax, voltagemin, current, currentmax, currentmin, power FROM " + cellName + " GROUP BY time(5s) FILL(none)", function( err, results ) {
-        
+
         if (err) {
 
             res.send( JSON.stringify( {
@@ -273,14 +273,14 @@ function resetServer() {
 }
 
 exports.setConfig = function( config, resetClient ) {
-    
+
     exports.setHost( config.host, false );
     exports.setUsername( config.username, false );
     exports.setPassword( config.password, false );
     exports.setPort( config.port, false );
     exports.setDB( config.db, false );
     //exports.setServerPort( config.server_port, false );
-    
+
     configInfluxDb = config;
 
     if( resetClient ) {

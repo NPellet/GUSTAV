@@ -1,5 +1,5 @@
 
-define( [ 'json!params', 'js/influxdb', 'jsgraph', 'tinycolor', 'bootstrap', 'populate' ], function( params, influxdb, Graph, tinycolor ) {
+define( [ 'json!params', 'js/influxdb', 'jquery', 'jsgraph', 'tinycolor', 'bootstrap', 'populate' ], function( params, influxdb, $, Graph, tinycolor ) {
 
 	var period = 100;
 
@@ -14,17 +14,17 @@ define( [ 'json!params', 'js/influxdb', 'jsgraph', 'tinycolor', 'bootstrap', 'po
 		if( $("#follow-time").hasClass('active') ) {
 
 			if( period ) {
-				
-				mainGraph.getBottomAxis().zoom( Date.now() - period, Date.now() + period / 10 );	
+
+				mainGraph.getBottomAxis().zoom( Date.now() - period, Date.now() + period / 10 );
 				mainGraph.getLeftAxis().scaleToFitAxis( mainGraph.getBottomAxis(), false, undefined, undefined, true, true );
-				
+
 			}
 
 			mainGraph.draw();
 		}
 	}
 
-	
+
 		var graphConstruction = [
 			{
 				yUnit: "A",
@@ -60,7 +60,13 @@ define( [ 'json!params', 'js/influxdb', 'jsgraph', 'tinycolor', 'bootstrap', 'po
 	 	recalculateAxisSpan();
 
 	 	influxdb.ready( $("#form-influxdb"));
-		//tracestyle.setDom( $("#tracestyle") );	 	
+		//tracestyle.setDom( $("#tracestyle") );
+
+		$( window ).on( 'resize', function() {
+			mainGraph.resize( $("#graphs").width(), 800 );
+		});
+
+
 
 	 	( function() {
 
@@ -132,7 +138,7 @@ define( [ 'json!params', 'js/influxdb', 'jsgraph', 'tinycolor', 'bootstrap', 'po
 
 				var $this = $( this );
 
-				
+
 				if( port ) {
 
 					var connectingTimeout = setTimeout( function() {
@@ -168,7 +174,7 @@ define( [ 'json!params', 'js/influxdb', 'jsgraph', 'tinycolor', 'bootstrap', 'po
 								.prop( 'disabled', false )
 								.children('span')
 								.remove();
-						
+
 						} else {
 
 							updateList();
@@ -181,7 +187,7 @@ define( [ 'json!params', 'js/influxdb', 'jsgraph', 'tinycolor', 'bootstrap', 'po
 			 			.append( '<span class="glyphicon glyphicon-refresh spinning" aria-hidden="true"></span>' )
 			 			.addClass( "connecting" );
 				}
-			} );	
+			} );
 
 
 			list.on("change", function() {
@@ -194,13 +200,17 @@ define( [ 'json!params', 'js/influxdb', 'jsgraph', 'tinycolor', 'bootstrap', 'po
 
 			connected_list.on("click", ".status-remove", function() {
 
-				//$( this ).parent().parent().
+				$.getJSON("/removeDevice", { deviceName: $( this ).parent().parent().data( 'device-name' ) }, function(  ) {
+					updateList();
+				});
+				$( this ).parent().parent().remove();
+
 			})
 
 			var currentConnectedDevices = {};
 
 	 		function updateList() {
-	 			
+
 	 			var somethingChanged = false;
 
 	 			$.getJSON("/getConnectedDevices", function( devices ) {
@@ -208,10 +218,15 @@ define( [ 'json!params', 'js/influxdb', 'jsgraph', 'tinycolor', 'bootstrap', 'po
 	 				var li;
 	 				for( var i in devices ) {
 
+						if( ! devices[ i ].name ) {
+							continue;
+						}
+
 	 					if( ! currentConnectedDevices[ i ] || currentConnectedDevices[ i ].error !== devices[ i ].error ) {
 
 	 						somethingChanged = true;
-	 					}	
+	 					}
+
 
 	 					if( ( li = connected_list.find('li[data-device-name="' + devices[ i ].name + '"]' ) ).length == 0 ) {
 	 						li = $('<li data-device-name="' + devices[ i ].name + '" class="list-group-item"><span>' + devices[ i ].name + '</span></li>');
@@ -256,11 +271,11 @@ define( [ 'json!params', 'js/influxdb', 'jsgraph', 'tinycolor', 'bootstrap', 'po
 	 		updateList();
 
 		} ) ();
-	
+
 
 
 	 	$("#form-device").on("click", "button[name=start]", function() {
-	 		
+
 	 		$.get("/startChannel/" + currentInstrument + "/" + currentChannel, $("#form-device").serializeObject(), function() {
 	 			getChannels();
 	 		});
@@ -273,9 +288,9 @@ define( [ 'json!params', 'js/influxdb', 'jsgraph', 'tinycolor', 'bootstrap', 'po
 	 	} );
 
 	 	$("#form-device").on("click", "button[name=stop]", function() {
-			
+
 			/*graphs( function( graph ) {
-				graph.getSerie("serie_" + currentChannel ).setData([]);	
+				graph.getSerie("serie_" + currentChannel ).setData([]);
 				graph.draw();
 			});
 			*/
@@ -313,7 +328,7 @@ define( [ 'json!params', 'js/influxdb', 'jsgraph', 'tinycolor', 'bootstrap', 'po
 
 				recalculateAxisSpan();
 			} else {
-			
+
 				var mid = ( mainGraph.getBottomAxis().getCurrentMin() + mainGraph.getBottomAxis().getCurrentMax() ) / 2;
 				mainGraph.getBottomAxis().zoom( mid - period / 2, mid + period / 2 );
 				mainGraph.getLeftAxis().scaleToFitAxis( graph.getBottomAxis(), false, false, false, false, true );
@@ -344,7 +359,7 @@ define( [ 'json!params', 'js/influxdb', 'jsgraph', 'tinycolor', 'bootstrap', 'po
 
 
  		$("#form-channels-jsc").on("change", function() {
- 			
+
  		});
 
 
@@ -365,8 +380,8 @@ define( [ 'json!params', 'js/influxdb', 'jsgraph', 'tinycolor', 'bootstrap', 'po
 	function updateFormDevice( group, channel ) {
 
 		currentChannel = channel;
-		currentInstrument = group; 
-		
+		currentInstrument = group;
+
 		console.log( channel, channels, group );
 		for( var i = 0, l = channels[ group ].length; i < l ; i ++ ) {
 
@@ -400,11 +415,11 @@ define( [ 'json!params', 'js/influxdb', 'jsgraph', 'tinycolor', 'bootstrap', 'po
 	 		stopButton.prop( 'disabled', false );
 	 		pauseButton.prop( 'disabled', true );
 	 		updateButton.prop( 'disabled', true );
-	 	
+
 	 	} else {
 	 		startButton.prop( 'disabled', false );
 	 		stopButton.prop( 'disabled', true );
-	 		pauseButton.prop( 'disabled', true );	
+	 		pauseButton.prop( 'disabled', true );
 	 		updateButton.prop( 'disabled', true );
 	 	}
 
@@ -424,7 +439,7 @@ define( [ 'json!params', 'js/influxdb', 'jsgraph', 'tinycolor', 'bootstrap', 'po
 
 					intervals: [ 1000, 5000, 15000, 60000, 900000, 1800000, 3600000, 8640000 ]
 				},
-				'drag': { 
+				'drag': {
 					dragY: false,
 					persistanceX: false,
 
@@ -445,15 +460,15 @@ define( [ 'json!params', 'js/influxdb', 'jsgraph', 'tinycolor', 'bootstrap', 'po
 					mainGraph.getLeftAxis( 2 ).scaleToFitAxis( mainGraph.getBottomAxis(), false, undefined, undefined, true, true );
 
 					mainGraph.draw();
-				
-					
+
+
 					$("#follow-time").removeClass('active');
 					$(".time").removeClass('active');
 				}
 
 
 				 },
-				'zoom': { 
+				'zoom': {
 
 					zoomMode: 'x',
 					transition: true,
@@ -468,14 +483,14 @@ define( [ 'json!params', 'js/influxdb', 'jsgraph', 'tinycolor', 'bootstrap', 'po
 							max = this.graph.getBottomAxis().getCurrentMax();
 
 						lockRedraw = false;
-							
+
 						mainGraph.getLeftAxis( 0 ).scaleToFitAxis( mainGraph.getBottomAxis(), false, undefined, undefined, true, true );
 						mainGraph.getLeftAxis( 1 ).scaleToFitAxis( mainGraph.getBottomAxis(), false, undefined, undefined, true, true );
 						mainGraph.getLeftAxis( 2 ).scaleToFitAxis( mainGraph.getBottomAxis(), false, undefined, undefined, true, true );
 
 						mainGraph.draw();
 
-					
+
 						period = max - min;
 						$("#follow-time").removeClass('active');
 						$(".time").removeClass('active');
@@ -515,9 +530,9 @@ define( [ 'json!params', 'js/influxdb', 'jsgraph', 'tinycolor', 'bootstrap', 'po
 		};
 
 
- 		var axes = { 
- 			bottom: [ 
- 				{ 
+ 		var axes = {
+ 			bottom: [
+ 				{
  					type: 'time'
  				}
  			],
@@ -528,7 +543,7 @@ define( [ 'json!params', 'js/influxdb', 'jsgraph', 'tinycolor', 'bootstrap', 'po
 
 		graphConstruction.map( function( el ) {
 
-			axes.left.push( 
+			axes.left.push(
 				{
 					scientificScale: true,
 					engineeringScale: true,
@@ -555,7 +570,7 @@ define( [ 'json!params', 'js/influxdb', 'jsgraph', 'tinycolor', 'bootstrap', 'po
 
 
 		return mainGraph;
-		
+
 	 }
 
 	var defaultChannel = {
@@ -566,9 +581,9 @@ define( [ 'json!params', 'js/influxdb', 'jsgraph', 'tinycolor', 'bootstrap', 'po
 	var channels;
 	function getChannels() {
 
-		
+
 		mainGraph.getLegend().fixSeries([]);
-		
+
 
 		$.getJSON("/getChannels", {}, function( ch ) {
 
@@ -589,7 +604,7 @@ define( [ 'json!params', 'js/influxdb', 'jsgraph', 'tinycolor', 'bootstrap', 'po
 					html += '<option value="' + i + ';' + channels[ i ][ j ].channelId + '" class="' + ( running ? 'running' : '' ) + '">' + label + ( running ? ' (running)' : ' (available)' ) + '</option>';
 
 					var exists = false;
-					
+
 					graphConstruction.map( function( el, index ) {
 
 						seriename = "serie_" + i + "_" + channels[ i ][ j ].channelId + "_" + el.timeseriemanagerserieparam;
@@ -598,14 +613,14 @@ define( [ 'json!params', 'js/influxdb', 'jsgraph', 'tinycolor', 'bootstrap', 'po
 
 							mainGraph
 								.getPlugin("timeSerieManager")
-								.newSerie( 
+								.newSerie(
 									seriename,
 									{ lineWidth: 2 },
 									'line',
-									{ 
+									{
 										measurement: channels[ i ][ j ].filename,
 										parameter: el.timeseriemanagerserieparam
-									} 
+									}
 								)
 								.autoAxis()
 								.setYAxis( mainGraph.getLeftAxis( index ) )
@@ -620,7 +635,7 @@ define( [ 'json!params', 'js/influxdb', 'jsgraph', 'tinycolor', 'bootstrap', 'po
 							if( index == 0 ) {
 								mainGraph.getLegend().fixSeriesAdd( mainGraph.getSerie( seriename ) );
 							}
-							
+
 							exists = true;
 
 						} else if( mainGraph.getSerie( seriename ) && ! running ) {
@@ -631,12 +646,12 @@ define( [ 'json!params', 'js/influxdb', 'jsgraph', 'tinycolor', 'bootstrap', 'po
 						} else if( running ) {
 
 							mainGraph.getLegend().fixSeriesAdd( mainGraph.getSerie( seriename ) );
-							
+
 							exists = true;
 						}
 
 						if( running ) {
-							var globalSerieName = "serie_" + i + "_" + channels[ i ][ j ].channelId 
+							var globalSerieName = "serie_" + i + "_" + channels[ i ][ j ].channelId
 							allnames[ globalSerieName ] = allnames[ globalSerieName ] || [];
 							allnames[ globalSerieName ].push( seriename );
 						}
@@ -668,7 +683,7 @@ define( [ 'json!params', 'js/influxdb', 'jsgraph', 'tinycolor', 'bootstrap', 'po
 
 				j++;
 			}
-			
+
 			mainGraph.getLegend().update();
 console.log( html );
 			$(".channels").html( html );
