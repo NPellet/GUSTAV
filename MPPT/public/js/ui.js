@@ -313,6 +313,35 @@ define( [ 'json!params', 'js/influxdb', 'jquery', 'jsgraph', 'tinycolor', 'boots
 
 
 
+	 	$("button[name=list-results]").on('click', function() {
+
+	 		$.getJSON("/listMeasurements", {}, function( results ) {
+
+	 			var options = '<option selected="selected" disabled="disabled">Select a measurement</option>';
+
+	 			function pad( val ) {
+	 				if( val < 10 ) {
+	 					return "0" + val;
+	 				}
+	 				return val;
+	 			}
+
+	 			results.map( function( val ) {
+
+	 				if( val ) {
+	 					var start = new Date( val.start );
+	 			
+		 				options += "<option value='" + val.fullname + "'>" + val.name + " (Begins at " + start.getFullYear() + "/" + start.getMonth() + "/" + start.getDate() + " " + pad( start.getHours() ) + "h" + pad( start.getMinutes() ) + "m" + pad( start.getSeconds() ) + "s)</option>";
+		 			}
+	 			});
+
+	 			$("#list-results-list").html( options );
+	 			
+	 		});
+	 	});
+
+
+
 		$("input[name=name]").on( "keyup", function() {
 		 	var status = statusField.prop('value');
 			if( status !== "running" ) {
