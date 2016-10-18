@@ -585,7 +585,7 @@ app.get("/listMeasurements", function( req, res ) {
 
 		response.on("end", function( ) {
 
-			//console.log( body );
+			console.log( body );
 			try {
 				body = JSON.parse( body );
 			} catch ( e ) {
@@ -608,11 +608,13 @@ app.get("/listMeasurements", function( req, res ) {
 			});
 
 			res.send( body );
-		});
+		});		
 	} );
 
 	req.end();
 } );
+
+
 
 app.get("/connect", function( req, res ) {
 
