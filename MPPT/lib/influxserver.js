@@ -147,7 +147,7 @@ app.get("/getData", function( req, res ) {
     }
 
     query = "SELECT MEAN(" + parameter + ") AS mean, MAX(" + paramMax + ") AS max, MIN(" + paramMin + ") AS min FROM " + cellName + " WHERE ( time >= " + timeFrom + " AND time < " + timeTo+ " ) GROUP BY time(" + ( grouping ) + "s) FILL(none)";
-
+console.log( query );
     client.query(query, function(err, results) {
 
         if (err) {
@@ -160,7 +160,7 @@ app.get("/getData", function( req, res ) {
 
             return;
         }
-
+console.log( results.length );
         var dataMean = [],
             dataMinMax = [];
 
@@ -262,10 +262,10 @@ app.get("/showMeasurements", function( req, res ) {
         client.query("SELECT voltage,time FROM \"" + results[ index ].name + "\" ORDER BY time ASC limit 1; SELECT voltage,time FROM \"" + results[ index ].name + "\" ORDER BY time DESC limit 1;", function( err, res ) {
 
             if( err ) {
-            
+
             } else {
-                
-            
+
+
                 if( res[ 0 ][ 0 ] && res[0][0].time && res[1][0] && res[ 1 ][ 0 ].time ) {
                     results[ index ].from = new Date( res[ 0 ][ 0 ].voltage );
                     results[ index ].to = new Date( res[ 1 ][ 0 ].voltage );
