@@ -1,6 +1,46 @@
 
 define( [ 'json!params', 'js/influxdb', 'jquery', 'jsgraph', 'tinycolor', 'bootstrap', 'populate' ], function( params, influxdb, $, Graph, tinycolor ) {
 
+
+
+	jQuery.fn.extend({
+	  mask: function( text, bgcolor, textcolor ) {
+	    return this.each(function() {
+	      	
+	      	var pos = $( this ).position(),
+	      		w = $( this ).outerWidth(),
+	      		h = $( this ).outerHeight();
+
+	    	var div = $("<div />").css( {
+	    		position: "absolute",
+	    		left: pos.left,
+	    		top: pos.top,
+	    		backgroundColor: bgcolor || '#ffffff',
+	    		color: textcolor || 'black',
+	    		width: w,
+	    		height: h,
+	    		lineHeight: '3em',
+	    		zIndex: 100000,
+	    		textAlign: "center"
+	    	} );
+
+	    	$( this ).prepend( div );
+
+	    	var divInner = $( "<div>" + text + "</div>").css( 'text-align', 'center' );
+	    	var divButtons = $('<div><button class="btn btn-default">Ok</button></div>');
+
+	    	divButtons.children('button').css('margin', 'auto').on("click", function() {
+	    		div.remove();
+	    	});
+
+	    	div.append( divInner );
+	    	div.append( divButtons );
+	    });
+	 }}
+	 );
+
+
+
 	var period = 100;
 
 	setInterval( function() {
