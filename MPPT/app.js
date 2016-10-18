@@ -860,6 +860,82 @@ app.get("/getInfluxDBConfig", function( req, res ) {
 	res.send( config.influxdb );
 } );
 
+
+
+app.get("/getData", function( req, res ) {
+    
+    if( ! client ) {
+        res.send( {
+            status: 0,
+            error: "No client connected"
+        } );
+        return;
+    }
+
+    var timeFrom = parseInt( req.query.from ) * 1000000; // to ns
+    var timeTo = parseInt( req.query.to ) * 1000000; // to ns
+
+    var grouping = req.query.grouping / 1000; // to seconds
+
+    var cellName = req.query.cellName;
+    var parameter = req.query.parameter;
+
+    var paramMax = parameter + "max";
+    var paramMin = parameter + "min";
+
+    if( parameter == "power" ) {
+        paramMax = parameter;
+        paramMin = parameter;
+    }
+
+    query = "SELECT MEAN(" + parameter + ") AS mean, MAX(" + paramMax + ") AS max, MIN(" + paramMin + ") AS min FROM " + cellName + " WHERE ( time >= " + timeFrom + " AND time < " + timeTo+ " ) GROUP BY time(" + ( grouping ) + "s) FILL(none)";
+
+    client.query(query, function(err, results) {
+
+        if (err) {
+
+            res.send( {
+                status: 0,
+                error: err.toString(),
+                data: []
+            } );
+
+            return;
+        }
+
+        var dataMean = [],
+            dataMinMax = [];
+
+        for( var i = 0, l = results[ 0 ].length; i < l; i ++ ) {
+
+            var time = new Date( results[ 0 ][ i ].time );
+
+            if( results[ 0 ][ i ].mean > 3 || results[ 0 ][ i ].min > 3 || results[ 0 ][ i ].max > 3 ) {
+                continue;
+            }
+
+            dataMean.push( time.getTime() );
+            dataMean.push( results[ 0 ][ i ].mean );
+
+            dataMinMax.push( time.getTime() );
+            dataMinMax.push( results[ 0 ][ i ].min );
+            dataMinMax.push( results[ 0 ][ i ].max );
+        }
+
+        
+        res.send( { 
+
+            status: 1,
+            error: false,
+            data: {
+                mean: dataMean,
+                minmax: dataMinMax    
+            }
+        } );
+    } );
+} );
+
+
 function saveConfig() {
 	fs.writeFileSync( "config.json", JSON.stringify( config, false, "\t" ) );
 }
