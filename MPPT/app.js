@@ -222,8 +222,10 @@ function openConnection( connection, portName ) {
 		connection.connection.open( function( err ) {
 
 			connection.error = false;
-console.log( err );
+
 			if( err ) {
+
+				console.log( err );
 				connection.error = true;
 				connection.errorText = err.toString();
 
@@ -585,7 +587,6 @@ app.get("/listMeasurements", function( req, res ) {
 
 		response.on("end", function( ) {
 
-			console.log( body );
 			try {
 				body = JSON.parse( body );
 			} catch ( e ) {
@@ -757,13 +758,15 @@ app.get(/\/download\/([A-Za-z0-9,_-]+)\/([A-Za-z0-9,_-]+)\/([A-Za-z0-9,_-]+)/, f
 	    'Content-Length': postString.length
 	  }
 	};
-
+console.log( postString );
 	var req = http.request(options);
+	req.write( postString );
+
 	req.on('error', function( err ) {
 		console.log( "Error with request: " + err.message );
 	});
 
-	req.write( postString );
+
 
 
 	req.on("response", function( response ) {
@@ -773,12 +776,17 @@ app.get(/\/download\/([A-Za-z0-9,_-]+)\/([A-Za-z0-9,_-]+)\/([A-Za-z0-9,_-]+)/, f
 		response.on( "data", function( bdy ) {
 
 			body += bdy.toString('utf8');
+
 		});
 
 		response.on( "end", function() {
 
 			response = JSON.parse( body );
 
+			if( response.status == 0 ) {
+					res.send();
+					return;
+			}
 
 			switch( format ) {
 
