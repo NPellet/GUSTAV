@@ -23,7 +23,7 @@ Waveform.prototype = {
 		this.length = this.data.length;
 
 		this._checkScalingWave();
-
+		return this;
 	},
 
 	setDataFromArray: function( a, index, startAt ) {
@@ -37,6 +37,7 @@ Waveform.prototype = {
 		this.length = this.data.length;
 
 		this._checkScalingWave();
+		return this;
 	},
 
 	get: function( index ) {

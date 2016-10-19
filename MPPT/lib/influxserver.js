@@ -160,7 +160,7 @@ app.get("/getData", function( req, res ) {
 
             return;
         }
-
+console.log( results.length );
         var dataMean = [],
             dataMinMax = [];
 
@@ -194,66 +194,6 @@ app.get("/getData", function( req, res ) {
 } );
 
 
-app.get("/export", function( req, res ) {
-
-    if( ! client ) {
-
-        res.send( JSON.stringify( {
-            status: 0,
-            error: "No client connected"
-        } ) );
-        return;
-    }
-
-    var cellName = req.body.cellName;
-
-    console.log( cellName );
-    client.query( "SELECT voltage, voltagemax, voltagemin, current, currentmax, currentmin, power FROM " + cellName + " GROUP BY time(5s) FILL(none)", function( err, results ) {
-
-        if (err) {
-
-            res.send( JSON.stringify( {
-                status: 0,
-                error: err.toString(),
-                data: []
-            } ) );
-
-            return;
-        }
-
-        var headers = [ 'voltage', 'voltagemin', 'voltagemax', 'current', 'currentmin', 'currentmax' ];
-        var data = {};
-        var time = [];
-
-        headers.map( function( val ) {
-            data[ val ] = [];
-        } );
-
-        for( var i = 0, l = results[ 0 ].length; i < l; i ++ ) {
-
-            var timestamp = new Date( results[ 0 ][ i ].time );
-            if( i == 0 ) {
-                var time0 = timestamp.getTime();
-            }
-
-            time.push( ( timestamp.getTime() - time0 ) / 3600000 )
-
-            headers.map( function( head ) {
-                data[ head ].push( results[ 0 ][ i ][ head ])
-            } );
-        }
-
-        res.send( JSON.stringify( {
-
-            status: 1,
-            error: false,
-            data: data
-
-        } ) );
-    } );
-} );
-
-
 
 app.get("/showMeasurements", function( req, res ) {
 
@@ -262,10 +202,10 @@ app.get("/showMeasurements", function( req, res ) {
         client.query("SELECT voltage,time FROM \"" + results[ index ].name + "\" ORDER BY time ASC limit 1; SELECT voltage,time FROM \"" + results[ index ].name + "\" ORDER BY time DESC limit 1;", function( err, res ) {
 
             if( err ) {
-            
+
             } else {
-                
-            
+
+
                 if( res[ 0 ][ 0 ] && res[0][0].time && res[1][0] && res[ 1 ][ 0 ].time ) {
                     results[ index ].from = new Date( res[ 0 ][ 0 ].voltage );
                     results[ index ].to = new Date( res[ 1 ][ 0 ].voltage );
@@ -306,19 +246,19 @@ app.get("/export", function( req, res ) {
 
     client.query("SELECT voltage,time FROM \"" + cellName + "\" ORDER BY time ASC limit 1; SELECT voltage,time FROM \"" + cellName + "\" ORDER BY time DESC limit 1;", function( err, results ) {
 
-           
-
         var _from = results[ 0 ][ 0 ].voltage;
         var _to = results[ 1 ][ 0 ].voltage;
-//console.log ( "SELECT mean(voltage) as voltage, max(voltagemax) as voltagemax, min(voltagemin) as voltagemin, mean(current) as current, max(currentmax) as currentmax, min(currentmin) as currentmin, mean(power) as power FROM " + cellName + " WHERE ( time < \"" + _to + "\" AND time > \"" + _from + "\" ) GROUP BY time(10m) FILL(none)" );
-        client.query( "SELECT mean(voltage) as voltage, max(voltagemax) as voltagemax, min(voltagemin) as voltagemin, mean(current) as current, max(currentmax) as currentmax, min(currentmin) as currentmin, mean(power) as power FROM \"" + cellName + "\" WHERE ( time < '" + _to + "' AND time > '" + _from + "' ) GROUP BY time(" + timing + "s) FILL(none)", function( err, results ) {
-            console.log( err, results);
+
+        var query = "SELECT mean(voltage) as voltage, max(voltagemax) as voltagemax, min(voltagemin) as voltagemin, mean(current) as current, max(currentmax) as currentmax, min(currentmin) as currentmin, mean(power) as power FROM \"" + cellName + "\" WHERE ( time < '" + _to + "' AND time > '" + _from + "' ) GROUP BY time(" + timing + "s) FILL(none)";
+
+        client.query( query, function( err, results ) {
 
             if (err) {
 
                 res.send( JSON.stringify( {
                     status: 0,
                     error: err.toString(),
+                    query: query,
                     data: []
                 } ) );
 
