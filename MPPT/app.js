@@ -502,7 +502,7 @@ function handshake( connection, portName, response ) {
 
 
 		  			} else {
-console.log('File is getting parsed');
+						console.log('Reading calibration file...');
 		  				connection.calibration = JSON.parse( fs.readFileSync( filepath ) );
 		  				resolver( response );
 		  			}
@@ -510,6 +510,8 @@ console.log('File is getting parsed');
 		  		} );
 			}
 	  	};
+
+
 	  	connection.connection.on('data', listener );
 
 			var connectionTimeout = setTimeout( function() {
@@ -758,7 +760,7 @@ app.get(/\/download\/([A-Za-z0-9,_-]+)\/([A-Za-z0-9,_-]+)\/([A-Za-z0-9,_-]+)/, f
 	    'Content-Length': postString.length
 	  }
 	};
-console.log( postString );
+
 	var req = http.request(options);
 	req.write( postString );
 

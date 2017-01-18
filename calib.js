@@ -54,7 +54,6 @@ function sendCommands( commands ) {
 	var command = commands.shift();
 	serialPort.write( command );
 
-	console.log( command );
 
 	if( commands.length == 0 ) {
 		dataReady = true;
@@ -207,7 +206,6 @@ serialPort.on("open", function() {
 					voltage.push( data[ 0 ] );
 					current.push( data[ 1 ] );
 
-					console.log( data[ 0 ], data[ 1 ] );
 					/*
 					if( data[ 2 ] == 480 || data[ 2 ] == 0 ) {
 						colorFunc = 'black';

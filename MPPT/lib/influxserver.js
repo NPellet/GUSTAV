@@ -160,7 +160,7 @@ app.get("/getData", function( req, res ) {
 
             return;
         }
-console.log( results.length );
+
         var dataMean = [],
             dataMinMax = [];
 
@@ -246,8 +246,8 @@ app.get("/export", function( req, res ) {
 
     client.query("SELECT voltage,time FROM \"" + cellName + "\" ORDER BY time ASC limit 1; SELECT voltage,time FROM \"" + cellName + "\" ORDER BY time DESC limit 1;", function( err, results ) {
 
-        var _from = results[ 0 ][ 0 ].voltage;
-        var _to = results[ 1 ][ 0 ].voltage;
+        var _from = results[ 0 ][ 0 ].time;
+        var _to = results[ 1 ][ 0 ].time;
 
         var query = "SELECT mean(voltage) as voltage, max(voltagemax) as voltagemax, min(voltagemin) as voltagemin, mean(current) as current, max(currentmax) as currentmax, min(currentmin) as currentmin, mean(power) as power FROM \"" + cellName + "\" WHERE ( time < '" + _to + "' AND time > '" + _from + "' ) GROUP BY time(" + timing + "s) FILL(none)";
 
