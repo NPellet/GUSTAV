@@ -6,6 +6,7 @@ var influx = require('influx')
 var fs = require('fs');
 var params = JSON.parse( fs.readFileSync( 'params.json' ) );
 var util = require("./util");
+var extend = require("extend");
 
 var configInfluxDb = {
     host: 'influxdb.epfl.ch',
@@ -15,7 +16,7 @@ var configInfluxDb = {
     database: 'lpi'
 };
 
-var client;
+var client, client_1min, client_1hour;
 
 app.use( bodyParser.json() );
 
@@ -101,7 +102,13 @@ app.post('/saveData', function( req, res ) {
         var cellName = req.body[ i ].cellName;
         var data = req.body[ i ].data;
 
-        client.writePoints( cellName, data, function( err ) {
+        data = data.map( ( el ) => {
+            
+            return { measurement: cellName, fields: el[ 0 ] };
+        });
+
+        client.writePoints( data ).then( ( err ) => {
+
             if (err) {
                 console.log(err);
                 saveData( i + 1, true );
@@ -109,7 +116,8 @@ app.post('/saveData', function( req, res ) {
             }
 
             saveData( i + 1, error );
-        } );
+        }) 
+
     }
 
 
@@ -146,38 +154,44 @@ app.get("/getData", function( req, res ) {
         paramMin = parameter;
     }
 
-    query = "SELECT MEAN(" + parameter + ") AS mean, MAX(" + paramMax + ") AS max, MIN(" + paramMin + ") AS min FROM " + cellName + " WHERE ( time >= " + timeFrom + " AND time < " + timeTo+ " ) GROUP BY time(" + ( grouping ) + "s) FILL(none)";
+    let theClient = client;
 
-    client.query(query, function(err, results) {
+    if( grouping >= 60 && grouping < 3600 ) {
+        theClient = client_1min;
+    } else if( grouping >= 3600 ) {
+        theClient = client_1hour;
+    }
+//console.log( grouping, theClient );
+    
+    if( theClient != client ) {
+        var paramMax = parameter + "_max";
+        var paramMin = parameter + "_min";
+        query = "SELECT MEAN(" + parameter + "_mean) AS mean, MAX(" + paramMax + ") AS max, MIN(" + paramMin + ") AS min FROM " + cellName + " WHERE ( time >= " + timeFrom + " AND time < " + timeTo+ " ) GROUP BY time(" + ( grouping ) + "s) FILL(none)";
 
-        if (err) {
+    else    {
+        query = "SELECT MEAN(" + parameter + ") AS mean, MAX(" + paramMax + ") AS max, MIN(" + paramMin + ") AS min FROM " + cellName + " WHERE ( time >= " + timeFrom + " AND time < " + timeTo+ " ) GROUP BY time(" + ( grouping ) + "s) FILL(none)";
+    }
 
-            res.send( {
-                status: 0,
-                error: err.toString(),
-                data: []
-            } );
 
-            return;
-        }
+    theClient.query(query).then( results => {
 
         var dataMean = [],
             dataMinMax = [];
 
-        for( var i = 0, l = results[ 0 ].length; i < l; i ++ ) {
+        for( var i = 0, l = results.length; i < l; i ++ ) {
 
-            var time = new Date( results[ 0 ][ i ].time );
+            var time = new Date( results[ i ].time );
 
-            if( results[ 0 ][ i ].mean > 3 || results[ 0 ][ i ].min > 3 || results[ 0 ][ i ].max > 3 ) {
+            if( results[ i ].mean > 3 || results[ i ].min > 3 || results[ i ].max > 3 ) {
                 continue;
             }
 
             dataMean.push( time.getTime() );
-            dataMean.push( results[ 0 ][ i ].mean );
+            dataMean.push( results[ i ].mean );
 
             dataMinMax.push( time.getTime() );
-            dataMinMax.push( results[ 0 ][ i ].min );
-            dataMinMax.push( results[ 0 ][ i ].max );
+            dataMinMax.push( results[ i ].min );
+            dataMinMax.push( results[ i ].max );
         }
 
 
@@ -189,6 +203,14 @@ app.get("/getData", function( req, res ) {
                 mean: dataMean,
                 minmax: dataMinMax
             }
+        } );
+    }, error => {
+        console.log( error );
+
+        res.send( {
+            status: 0,
+            error: error.toString(),
+            data: []
         } );
     } );
 } );
@@ -220,7 +242,7 @@ app.get("/showMeasurements", function( req, res ) {
         });
     }*/
 
-    client.query("SHOW MEASUREMENTS", function( err, results ) {
+    client.query("SHOW MEASUREMENTS").then( ( err, results ) => {
 
         res.send( JSON.stringify( results[ 0 ] ) );
 
@@ -244,27 +266,18 @@ app.get("/export", function( req, res ) {
     var cellName = req.body.measurement;
     var timing = req.body.grouping;
 
-    client.query("SELECT voltage,time FROM \"" + cellName + "\" ORDER BY time ASC limit 1; SELECT voltage,time FROM \"" + cellName + "\" ORDER BY time DESC limit 1;", function( err, results ) {
+
+
+    client.query("SELECT voltage,time FROM \"" + cellName + "\" ORDER BY time ASC limit 1; SELECT voltage,time FROM \"" + cellName + "\" ORDER BY time DESC limit 1;" ).then( ( err, results ) => {
 
         var _from = results[ 0 ][ 0 ].time;
         var _to = results[ 1 ][ 0 ].time;
 
         var query = "SELECT mean(voltage) as voltage, max(voltagemax) as voltagemax, min(voltagemin) as voltagemin, mean(current) as current, max(currentmax) as currentmax, min(currentmin) as currentmin, mean(power) as power FROM \"" + cellName + "\" WHERE ( time < '" + _to + "' AND time > '" + _from + "' ) GROUP BY time(" + timing + "s) FILL(none)";
 
-        client.query( query, function( err, results ) {
+        client.query( query ).then( results => {
 
-            if (err) {
-
-                res.send( JSON.stringify( {
-                    status: 0,
-                    error: err.toString(),
-                    query: query,
-                    data: []
-                } ) );
-
-                return;
-            }
-
+        
             var headers = [ 'voltage', 'voltagemin', 'voltagemax', 'current', 'currentmin', 'currentmax', 'power' ];
             var data = {};
             var time = [];
@@ -275,9 +288,9 @@ app.get("/export", function( req, res ) {
 
             data.time = time;
 
-            for( var i = 0, l = results[ 0 ].length; i < l; i ++ ) {
+            for( var i = 0, l = results.length; i < l; i ++ ) {
 
-                var timestamp = new Date( results[ 0 ][ i ].time );
+                var timestamp = new Date( results[ i ].time );
                 if( i == 0 ) {
                     var time0 = timestamp.getTime();
                 }
@@ -285,7 +298,7 @@ app.get("/export", function( req, res ) {
                 time.push( ( timestamp.getTime() - time0 ) / 3600000 )
 
                 headers.map( function( head ) {
-                    data[ head ].push( results[ 0 ][ i ][ head ])
+                    data[ head ].push( results[ i ][ head ])
                 } );
             }
 
@@ -296,6 +309,17 @@ app.get("/export", function( req, res ) {
                 data: data
 
             } ) );
+        }, error => {
+
+            res.send( JSON.stringify( {
+                status: 0,
+                error: err.toString(),
+                query: query,
+                data: []
+            } ) );
+
+            return;
+
         } );
 
 
@@ -315,7 +339,10 @@ function restartServer() {
 
 
 function reset() {
-    client = influx( configInfluxDb )
+    client = new influx.InfluxDB( configInfluxDb );
+
+    client_1min = new influx.InfluxDB( extend( configInfluxDb, { database: "lpi_downsampled_1min" } ) );
+    client_1hour = new influx.InfluxDB( extend( configInfluxDb, { database: "lpi_downsampled_1h" } ) );
 }
 
 function resetServer() {

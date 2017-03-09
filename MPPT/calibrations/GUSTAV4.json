@@ -1,10 +1,10 @@
 [
- {"ADCSlopeCurrent":-6.6969e-7,"ADCOffsetCurrent":0.021897,"ADCSlopeVoltage":-6.251e-05,"ADCOffsetVoltage":2.045,"channelId":0,"channelName":"Channel 0"},
- {"ADCSlopeCurrent":-6.6998e-7,"ADCOffsetCurrent":0.021937,"ADCSlopeVoltage":-6.251e-05,"ADCOffsetVoltage":2.045,"channelId":1,"channelName":"Channel 1"},
- {"ADCSlopeCurrent":-6.5931e-07,"ADCOffsetCurrent":0.021586,"ADCSlopeVoltage":-6.251e-05,"ADCOffsetVoltage":2.045,"channelId":2,"channelName":"Channel 2"},
- {"ADCSlopeCurrent":-6.6483e-07,"ADCOffsetCurrent":0.021755,"ADCSlopeVoltage":-6.251e-05,"ADCOffsetVoltage":2.045,"channelId":3,"channelName":"Channel 3"},
- {"ADCSlopeCurrent":-6.6127e-07,"ADCOffsetCurrent":0.02166,"ADCSlopeVoltage":-6.251e-05,"ADCOffsetVoltage":2.045,"channelId":4,"channelName":"Channel 4"},
- {"ADCSlopeCurrent":-6.6181e-07,"ADCOffsetCurrent":0.021669,"ADCSlopeVoltage":-6.251e-05,"ADCOffsetVoltage":2.045,"channelId":5,"channelName":"Channel 5"},
- {"ADCSlopeCurrent":-6.6423e-07,"ADCOffsetCurrent":0.021669,"ADCSlopeVoltage":-6.251e-05,"ADCOffsetVoltage":2.045,"channelId":6,"channelName":"Channel 6"},
- {"ADCSlopeCurrent":-6.5032e-7,"ADCOffsetCurrent":0.021099,"ADCSlopeVoltage":-6.251e-05,"ADCOffsetVoltage":2.045,"channelId":7,"channelName":"Channel 7"}
+ {"ADCSlopeCurrent":6.6969e-7,"ADCOffsetCurrent":-0.021897,"ADCSlopeVoltage":6.251e-05,"ADCOffsetVoltage":-2.045,"channelId":0,"channelName":"Channel 0"},
+ {"ADCSlopeCurrent":6.6998e-7,"ADCOffsetCurrent":-0.021937,"ADCSlopeVoltage":6.251e-05,"ADCOffsetVoltage":-2.045,"channelId":1,"channelName":"Channel 1"},
+ {"ADCSlopeCurrent":6.5931e-07,"ADCOffsetCurrent":-0.021586,"ADCSlopeVoltage":6.251e-05,"ADCOffsetVoltage":-2.045,"channelId":2,"channelName":"Channel 2"},
+ {"ADCSlopeCurrent":6.6483e-07,"ADCOffsetCurrent":-0.021755,"ADCSlopeVoltage":6.251e-05,"ADCOffsetVoltage":-2.045,"channelId":3,"channelName":"Channel 3"},
+ {"ADCSlopeCurrent":6.6127e-07,"ADCOffsetCurrent":-0.02166,"ADCSlopeVoltage":6.251e-05,"ADCOffsetVoltage":-2.045,"channelId":4,"channelName":"Channel 4"},
+ {"ADCSlopeCurrent":6.6181e-07,"ADCOffsetCurrent":-0.021669,"ADCSlopeVoltage":6.251e-05,"ADCOffsetVoltage":-2.045,"channelId":5,"channelName":"Channel 5"},
+ {"ADCSlopeCurrent":6.6423e-07,"ADCOffsetCurrent":-0.021669,"ADCSlopeVoltage":6.251e-05,"ADCOffsetVoltage":-2.045,"channelId":6,"channelName":"Channel 6"},
+ {"ADCSlopeCurrent":6.5032e-7,"ADCOffsetCurrent":-0.021099,"ADCSlopeVoltage":6.251e-05,"ADCOffsetVoltage":-2.045,"channelId":7,"channelName":"Channel 7"}
 ]

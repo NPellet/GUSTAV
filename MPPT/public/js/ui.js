@@ -8,7 +8,7 @@ define( [ 'json!params', 'js/influxdb', 'jquery', 'jsgraph', 'tinycolor', 'boots
 	    return this.each(function() {
 	      	
 	      	var pos = $( this ).position(),
-	      		w = $( this ).outerWidth(),
+	      		w = $( this ).outerWidth(), 
 	      		h = $( this ).outerHeight();
 
 	    	var div = $("<div />").css( {
@@ -451,7 +451,6 @@ define( [ 'json!params', 'js/influxdb', 'jquery', 'jsgraph', 'tinycolor', 'boots
 		currentChannel = channel;
 		currentInstrument = group;
 
-		console.log( channel, channels, group );
 		for( var i = 0, l = channels[ group ].length; i < l ; i ++ ) {
 
 			if( channels[ group ][ i ].channelId == channel ) {
@@ -463,7 +462,6 @@ define( [ 'json!params', 'js/influxdb', 'jquery', 'jsgraph', 'tinycolor', 'boots
 
 		var root = $("#form-device");
 	 	var status = statusField.prop('value');
-
 	 	if( status == "running" || status == "paused" ) {
 	 		$("input[name=name]", root ).prop( 'readonly', true );
 	 	} else {
@@ -486,6 +484,7 @@ define( [ 'json!params', 'js/influxdb', 'jquery', 'jsgraph', 'tinycolor', 'boots
 	 		updateButton.prop( 'disabled', true );
 
 	 	} else {
+
 	 		startButton.prop( 'disabled', false );
 	 		stopButton.prop( 'disabled', true );
 	 		pauseButton.prop( 'disabled', true );
@@ -506,7 +505,7 @@ define( [ 'json!params', 'js/influxdb', 'jquery', 'jsgraph', 'tinycolor', 'boots
 
 				'timeSerieManager': {
 
-					intervals: [ 1000, 5000, 15000, 60000, 900000, 1800000, 3600000, 8640000 ]
+					intervals: [ 5000, 15000, 60000, 900000, 1800000, 3600000, 8640000 ]
 				},
 				'drag': {
 					dragY: false,
@@ -635,7 +634,7 @@ define( [ 'json!params', 'js/influxdb', 'jquery', 'jsgraph', 'tinycolor', 'boots
 		mainGraph.getPlugin("timeSerieManager").registerPlugin( mainGraph.getPlugin('zoom'), 'zoomed' );
 		mainGraph.getPlugin("timeSerieManager").registerPlugin( mainGraph.getPlugin('drag'), 'dragging' );
 		mainGraph.getPlugin("timeSerieManager").registerPlugin( mainGraph.getPlugin('drag'), 'dragged' );
-		mainGraph.getPlugin("timeSerieManager").setIntervalCheck( params.client.graphRefreshRate );
+		mainGraph.getPlugin("timeSerieManager").setIntervalCheck( params.client.graphRefreshRate * 1000 );
 
 
 		return mainGraph;
@@ -735,26 +734,42 @@ define( [ 'json!params', 'js/influxdb', 'jquery', 'jsgraph', 'tinycolor', 'boots
 
 			var j = 0;
 
-			for( var i in allnames ) {
+			var colors = [
+				"b00707",
+				"f69a31",
+				"bc9c10",
+				"8da90f",
+				"11c55f",
+				"229ed3",
+				"4322d3",
+				"903da9"
 
-				color = tinycolor( { h: j * 270 / l, s: 1, l: .4 } );
 
+
+			]
+			for( var i in allnames ) { 
+
+				color = colors[ j ];//tinycolor( { h: j * 270 / l, s: 1, l: 0.5 * j / l + 0.3 } );
 				allnames[ i ].map( function( name ) {
 
 					var s = mainGraph.getSerie( name );
-					s.setLineColor( "#" + color.toHex() );
+					s.setLineColor( "#" + color );
 
 					if( s._zoneSerie ) {
-						s._zoneSerie.setLineColor( "#" + color.toHex() );
-						s._zoneSerie.setFillColor( "#" + color.toHex() );
+						s._zoneSerie.setLineColor( "#" + color );
+						s._zoneSerie.setFillColor( "#" + color );
 					}
 				} );
 
 				j++;
 			}
 
+
+			// All series created at this tage
+			mainGraph.getPlugin("timeSerieManager").update();
+
+
 			mainGraph.getLegend().update();
-console.log( html );
 			$(".channels").html( html );
 			$("#form-channels-jsc .channels").find('.running').prop('disabled', true );
 		} );

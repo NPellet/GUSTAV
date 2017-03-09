@@ -9714,7 +9714,7 @@
         this.plugins = [];
         this.currentSlots = {};
 
-        this.requestLevels = {};
+        this.requestLevels = new Map();
         this.update = function( noRecalculate, force ) {
 
           self.series.forEach( function( serie ) {
@@ -9808,7 +9808,10 @@
         var optimalIntervalIndex = this.options.intervals.indexOf( optimalInterval );
         var interval;
 
-        for ( var i = optimalIntervalIndex - 1; i <= optimalIntervalIndex + 1; i++ ) {
+        self.cleanRegister( optimalIntervalIndex );
+
+        // Downsampling intervals
+        for ( var i = optimalIntervalIndex; i <= optimalIntervalIndex + 1; i++ ) {
 
           interval = this.options.intervals[ i ];
           var startSlotId = self.computeSlotID( from, interval );
@@ -9855,6 +9858,26 @@
           this.request( serie, slotId, interval, priority, id, noProcess );
         }
       }
+
+      // Removes all requests with a time interval under 'interval'
+      PluginTimeSerieManager.prototype.cleanRegister = function( interval ) {
+        
+        if( ! this.requestLevels ) {
+          return;
+        }
+
+        this.requestLevels.forEach( ( levelArray ) => {
+
+          levelArray.forEach( ( levelElement, levelIndex ) => {
+
+            if( levelElement[ 4 ] < interval ) {
+              levelArray.splice( levelIndex, 1 );
+            }
+          } );
+
+        } );  
+      }
+
 
       PluginTimeSerieManager.prototype.request = function( serie, slotId, interval, priority, slotName, noProcess ) {
 
@@ -10121,6 +10144,7 @@
 
         var self = this;
 
+        self.update( true, true );
         this.interval = setInterval( function() {
           self.update( true, false );
         }, interval );
